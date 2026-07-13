@@ -141,24 +141,6 @@ export default function ProductDetailsModal({
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Left/Right Desktop Navigation Arrows */}
-                {imageUrls.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrev}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFDF7]/80 border border-[rgba(214,185,140,0.3)] text-[#5B4636] backdrop-blur-sm transition hover:bg-[#D6B98C] hover:text-[#5B4636] hover:scale-105"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFDF7]/80 border border-[rgba(214,185,140,0.3)] text-[#5B4636] backdrop-blur-sm transition hover:bg-[#D6B98C] hover:text-[#5B4636] hover:scale-105"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </>
-                )}
-
                 {/* Micro Swipe Helper Tag */}
                 <div className="absolute top-3 left-3 bg-[#FFFDF7]/85 backdrop-blur-sm px-2 py-0.5 border border-[rgba(214,185,140,0.2)] rounded-full text-[8px] font-black uppercase tracking-wider text-[#7a6153]">
                   Swipe to view ({activeIdx + 1}/{imageUrls.length})
@@ -170,6 +152,25 @@ export default function ProductDetailsModal({
                 <span>No Images Available</span>
               </div>
             )}
+
+            {/* Left/Right Desktop Navigation Arrows */}
+            {imageUrls.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrev}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFDF7]/80 border border-[rgba(214,185,140,0.3)] text-[#5B4636] backdrop-blur-sm transition hover:bg-[#D6B98C] hover:text-[#5B4636] hover:scale-105 shadow-md"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 hidden md:flex h-9 w-9 items-center justify-center rounded-full bg-[#FFFDF7]/80 border border-[rgba(214,185,140,0.3)] text-[#5B4636] backdrop-blur-sm transition hover:bg-[#D6B98C] hover:text-[#5B4636] hover:scale-105 shadow-md"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </>
+            )}
+
 
             {/* Slide Pagination Dots */}
             {imageUrls.length > 1 && (

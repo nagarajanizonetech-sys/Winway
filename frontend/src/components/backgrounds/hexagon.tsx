@@ -45,34 +45,69 @@ export function HexagonBackground({
     const isTouch = matchMedia("(hover: none)").matches;
     if (isTouch) return;
 
+    const parent = el.parentElement || el;
+    let cachedCells: HTMLDivElement[] | null = null;
+    let rAFId: number | null = null;
+
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const clientX = e.clientX;
+      const clientY = e.clientY;
 
-      el.style.setProperty("--mouse-x", `${x}px`);
-      el.style.setProperty("--mouse-y", `${y}px`);
+      if (rAFId) return;
 
-      const cells = el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`);
-      if (!cells) return;
+      rAFId = requestAnimationFrame(() => {
+        rAFId = null;
+        if (!cachedCells) {
+          cachedCells = Array.from(el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`));
+        }
+        if (cachedCells.length === 0) return;
 
-      const radius = 150;
-      cells.forEach((cell) => {
-        const cellX = cell.offsetLeft + hexWidth / 2;
-        const cellY = cell.offsetTop + hexHeight / 2;
+        const rect = el.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
 
-        const dx = x - cellX;
-        const dy = y - cellY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        el.style.setProperty("--mouse-x", `${x}px`);
+        el.style.setProperty("--mouse-y", `${y}px`);
 
-        if (dist < radius) {
-          const influence = 1 - dist / radius;
-          cell.style.backgroundColor = `rgba(201, 169, 110, ${0.18 + influence * 0.35})`;
-          cell.style.borderColor = `rgba(201, 169, 110, ${0.4 + influence * 0.4})`;
-          cell.style.transform = `scale(${1 + influence * 0.05})`;
-          cell.style.boxShadow = `0 0 ${influence * 12}px rgba(201, 169, 110, ${influence * 0.25})`;
-          cell.style.zIndex = "1";
-        } else {
+        const radius = 180;
+        cachedCells.forEach((cell) => {
+          const cellX = parseFloat(cell.getAttribute("data-x") || "0");
+          const cellY = parseFloat(cell.getAttribute("data-y") || "0");
+
+          const dx = x - cellX;
+          const dy = y - cellY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < radius) {
+            const influence = 1 - dist / radius;
+            cell.style.backgroundColor = `rgba(201, 169, 110, ${0.12 + influence * 0.4})`;
+            cell.style.borderColor = `rgba(201, 169, 110, ${0.3 + influence * 0.5})`;
+            cell.style.transform = `scale(${1 + influence * 0.08})`;
+            cell.style.boxShadow = `0 0 ${influence * 15}px rgba(201, 169, 110, ${influence * 0.3})`;
+            cell.style.zIndex = "1";
+          } else if (cell.style.transform !== "") {
+            cell.style.backgroundColor = "";
+            cell.style.borderColor = "";
+            cell.style.transform = "";
+            cell.style.boxShadow = "";
+            cell.style.zIndex = "";
+          }
+        });
+      });
+    };
+
+    const handleMouseLeave = () => {
+      if (rAFId) {
+        cancelAnimationFrame(rAFId);
+        rAFId = null;
+      }
+      el.style.setProperty("--mouse-x", `-999px`);
+      el.style.setProperty("--mouse-y", `-999px`);
+      if (!cachedCells) {
+        cachedCells = Array.from(el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`));
+      }
+      cachedCells.forEach((cell) => {
+        if (cell.style.transform !== "") {
           cell.style.backgroundColor = "";
           cell.style.borderColor = "";
           cell.style.transform = "";
@@ -82,26 +117,13 @@ export function HexagonBackground({
       });
     };
 
-    const handleMouseLeave = () => {
-      el.style.setProperty("--mouse-x", `-999px`);
-      el.style.setProperty("--mouse-y", `-999px`);
-      const cells = el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`);
-      if (!cells) return;
-      cells.forEach((cell) => {
-        cell.style.backgroundColor = "";
-        cell.style.borderColor = "";
-        cell.style.transform = "";
-        cell.style.boxShadow = "";
-        cell.style.zIndex = "";
-      });
-    };
-
-    el.addEventListener("mousemove", handleMouseMove);
-    el.addEventListener("mouseleave", handleMouseLeave);
+    parent.addEventListener("mousemove", handleMouseMove);
+    parent.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      el.removeEventListener("mousemove", handleMouseMove);
-      el.removeEventListener("mouseleave", handleMouseLeave);
+      parent.removeEventListener("mousemove", handleMouseMove);
+      parent.removeEventListener("mouseleave", handleMouseLeave);
+      if (rAFId) cancelAnimationFrame(rAFId);
     };
   }, [dims, hexWidth, hexHeight, id, shouldReduceMotion]);
 
@@ -112,11 +134,11 @@ export function HexagonBackground({
     "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
 
   const cells: { x: number; y: number; key: string; delay: number }[] = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
+  for (let row = -1; row < rows + 1; row++) {
+    for (let col = -1; col < cols + 1; col++) {
       const x = col * colSpacing + (row % 2 === 1 ? colSpacing / 2 : 0);
       const y = row * rowSpacing;
-      cells.push({ x, y, key: `${row}-${col}`, delay: (row + col) * 0.15 });
+      cells.push({ x, y, key: `${row}-${col}`, delay: ((row + col + 100) % 8) * 0.15 });
     }
   }
 
@@ -154,6 +176,8 @@ export function HexagonBackground({
           <div
             key={cell.key}
             className={`absolute hex-cell-${id}`}
+            data-x={cell.x + hexWidth / 2}
+            data-y={cell.y + hexHeight / 2}
             style={{
               left: cell.x,
               top: cell.y,
@@ -163,7 +187,7 @@ export function HexagonBackground({
               backgroundColor: "rgba(90, 62, 28, 0.18)",
               border: "1px solid rgba(90, 62, 28, 0.4)",
               animationDelay: `${cell.delay}s`,
-              transition: "background-color 0.2s, border-color 0.2s",
+              transition: "background-color 0.3s, border-color 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
               ...hexagonProps?.style,
             }}
             {...hexagonProps}

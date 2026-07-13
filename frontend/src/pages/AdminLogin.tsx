@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
 import api from "../services/api";
-import logo from "../logo.png";
+import logo from "../assets/winway1.webp";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");

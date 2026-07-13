@@ -1,0 +1,3 @@
+Optimizing logo size...
+Pillow is available
+Resized winway1.png -> winway1.webp: 497.6KB -> 18.8KB (Saved 96.2%)

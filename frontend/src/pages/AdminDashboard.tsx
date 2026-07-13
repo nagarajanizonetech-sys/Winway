@@ -5,7 +5,7 @@ import {
   HardDrive, Monitor, Gpu, Edit, Layout, Package
 } from "lucide-react";
 import api from "../services/api";
-import logo from "../logo.png";
+import logo from "../assets/winway1.webp";
 import HeroSectionManager from "../components/HeroSectionManager";
 
 type Tab = "products" | "hero";

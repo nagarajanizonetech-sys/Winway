@@ -1,13 +1,15 @@
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import logo from "../assets/winway1.png";
+import logo from "../assets/winway1.webp";
 import MagneticButton from "./animations/MagneticButton";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("Home");
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
   const shouldReduceMotion = useReducedMotion();
 
   const navLinks = [
@@ -17,208 +19,257 @@ export default function Navbar() {
     { name: "Contact", href: "#contact" },
   ];
 
+  const isVisibleRef = useRef(isVisible);
   useEffect(() => {
+    isVisibleRef.current = isVisible;
+  }, [isVisible]);
+
+  useEffect(() => {
+    let rAFId: number | null = null;
+
     const handleScroll = () => {
-      // If at the very bottom, highlight Contact
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60) {
-        setActiveLink("Contact");
-        return;
-      }
+      if (rAFId) return;
 
-      const sections = ["home", "services", "products", "contact"];
-      let currentSection = "Home";
+      rAFId = requestAnimationFrame(() => {
+        rAFId = null;
+        const currentScrollY = window.scrollY;
 
-      for (const sectionId of sections) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 120 && rect.bottom >= 120) {
-            currentSection = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-            break;
-          }
+        // Hide / show logic based on scroll direction
+        const nextVisible = !(currentScrollY > lastScrollY.current && currentScrollY > 100);
+        if (nextVisible !== isVisibleRef.current) {
+          setIsVisible(nextVisible);
         }
-      }
-      setActiveLink(currentSection);
+        lastScrollY.current = currentScrollY;
+
+        // If at the very bottom, highlight Contact
+        if (window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 60) {
+          setActiveLink("Contact");
+        }
+      });
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    // IntersectionObserver for active section spying (ScrollSpy)
+    const sections = ["home", "services", "products", "contact"];
+    const observerOptions = {
+      root: null,
+      rootMargin: "-120px 0px -40% 0px", // Trigger when elements are in the top-middle of the viewport
+      threshold: 0,
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          setActiveLink(id.charAt(0).toUpperCase() + id.slice(1));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+      if (rAFId) cancelAnimationFrame(rAFId);
+    };
   }, []);
+
+  const showNav = isVisible || isOpen;
 
   return (
     <motion.nav
       initial={{
         opacity: 0,
-        y: shouldReduceMotion ? -10 : -60,
-        filter: shouldReduceMotion ? "none" : "blur(10px)"
+        y: shouldReduceMotion ? -10 : -40,
       }}
       animate={{
-        opacity: 1,
-        y: 0,
-        filter: "blur(0px)"
+        opacity: showNav ? 1 : 0,
+        y: showNav ? 0 : -100,
       }}
       transition={{
-        duration: 0.8,
-        ease: [0.22, 1, 0.36, 1]
+        duration: 0.3,
+        ease: "easeInOut"
       }}
-      className="fixed top-0 left-0 w-full z-50"
-      style={{
-        background: "#ffffff",
-        borderBottom: "1px solid rgba(214, 185, 140, 0.3)",
-        boxShadow: "0 2px 20px rgba(91, 70, 54, 0.08)",
-      }}
+      className="fixed top-4 left-0 w-full z-50 px-4 sm:px-6 lg:px-8 pointer-events-none"
     >
-      <div
-        className="max-w-7xl mx-auto flex items-center justify-between px-6 sm:px-8"
-        style={{ height: "88px" }}
-      >
-        {/* Logo */}
-        <Link
-          to="/"
-          onClick={() => {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            setActiveLink("Home");
-          }}
-          className="flex items-center gap-2"
-        >
-          <img
-            src={logo}
-            alt="Winway Logo"
-            style={{
-              height: "68px",
-              width: "auto",
-              filter: "drop-shadow(0 1px 4px rgba(91,70,54,0.08))",
+      <div className="max-w-[1520px] mx-auto flex items-center justify-between">
+        
+        {/* Left: Floating Logo Container */}
+        <div className="flex-1 flex justify-start pointer-events-auto">
+          <Link
+            to="/"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              setActiveLink("Home");
             }}
-          />
-        </Link>
+            className="flex items-center bg-white/95 backdrop-blur-md px-6 py-3 rounded-full border border-[rgba(214,185,140,0.25)] shadow-[0_4px_20px_rgba(91,70,54,0.06)] hover:border-[rgba(214,185,140,0.4)] hover:shadow-[0_6px_24px_rgba(91,70,54,0.1)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+          >
+            <img
+              src={logo}
+              alt="Winway Logo"
+              style={{
+                height: "40px",
+                width: "auto",
+                filter: "drop-shadow(0 1px 4px rgba(91,70,54,0.08))",
+              }}
+            />
+          </Link>
+        </div>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex space-x-8 text-sm font-semibold">
+        {/* Center: Floating Pill Navigation Container */}
+        <div className="hidden md:flex flex-shrink-0 justify-center pointer-events-auto">
+          <div 
+            className="flex items-center space-x-8 px-8 py-[21px] bg-white/95 backdrop-blur-md rounded-full border border-[rgba(214,185,140,0.25)] shadow-[0_4px_20px_rgba(91,70,54,0.06)]"
+          >
+            {navLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setActiveLink(link.name)}
+                  className="relative transition-colors duration-300 text-sm font-semibold hover:text-[#5B4636] py-1"
+                  style={{ color: activeLink === link.name ? "#5B4636" : "#7a6153" }}
+                >
+                  {link.name}
+                  <span
+                    className="absolute -bottom-1 left-0 h-0.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: activeLink === link.name ? "100%" : "0%",
+                      background: "linear-gradient(to right, #D6B98C, #b8936a)",
+                    }}
+                  />
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  onClick={() => setActiveLink(link.name)}
+                  className="relative transition-colors duration-300 text-sm font-semibold hover:text-[#5B4636] py-1"
+                  style={{ color: activeLink === link.name ? "#5B4636" : "#7a6153" }}
+                >
+                  {link.name}
+                  <span
+                    className="absolute -bottom-1 left-0 h-0.5 rounded-full transition-all duration-300"
+                    style={{
+                      width: activeLink === link.name ? "100%" : "0%",
+                      background: "linear-gradient(to right, #D6B98C, #b8936a)",
+                    }}
+                  />
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Right: Floating CTA and Mobile Hamburger */}
+        <div className="flex-1 flex justify-end items-center gap-3 pointer-events-auto">
+          {/* Desktop CTA */}
+          <MagneticButton className="hidden md:inline-flex">
+            <a
+              href="#contact"
+              className="inline-flex items-center rounded-full px-7 py-[22px] text-xs font-bold uppercase tracking-widest text-[#5B4636] hover:scale-105 active:scale-95 transition-all duration-200"
+              style={{
+                background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",
+                boxShadow: "0 4px 14px rgba(184,147,106,0.3)",
+                border: "1px solid rgba(214, 185, 140, 0.25)",
+              }}
+            >
+              Contact Now
+            </a>
+          </MagneticButton>
+
+          {/* Mobile Hamburger */}
+          <button
+            className="md:hidden p-[21px] rounded-full bg-white/95 backdrop-blur-md border border-[rgba(214,185,140,0.25)] shadow-[0_4px_20px_rgba(91,70,54,0.06)] hover:bg-[#F3E9DC]/30 active:scale-95 transition-all flex items-center justify-center"
+            style={{ color: "#5B4636" }}
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+      </div>
+
+      {/* Floating Mobile Dropdown Menu */}
+      <motion.div
+        initial={false}
+        animate={isOpen ? "open" : "closed"}
+        variants={{
+          open: {
+            opacity: 1,
+            height: "auto",
+            display: "block",
+            transition: { duration: 0.3, ease: "easeOut" }
+          },
+          closed: {
+            opacity: 0,
+            height: 0,
+            transitionEnd: { display: "none" },
+            transition: { duration: 0.2, ease: "easeIn" }
+          }
+        }}
+        className="md:hidden mt-3 mx-auto w-full pointer-events-auto rounded-3xl bg-white/95 backdrop-blur-md border border-[rgba(214,185,140,0.25)] shadow-[0_10px_30px_rgba(91,70,54,0.1)] overflow-hidden"
+      >
+        <div className="py-2">
           {navLinks.map((link) =>
             link.href.startsWith("#") ? (
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => setActiveLink(link.name)}
-                className="relative transition-colors"
-                style={{ color: activeLink === link.name ? "#5B4636" : "#7a6153" }}
+                onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
+                className="flex items-center justify-between px-6 py-4 text-sm font-semibold transition-colors duration-300"
+                style={{
+                  color: activeLink === link.name ? "#5B4636" : "#7a6153",
+                  borderBottom: "1px solid rgba(214,185,140,0.1)",
+                }}
               >
                 {link.name}
-                <span
-                  className="absolute -bottom-1 left-0 h-0.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: activeLink === link.name ? "100%" : "0%",
-                    background: "linear-gradient(to right, #D6B98C, #b8936a)",
-                  }}
-                />
+                {activeLink === link.name && (
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
+                )}
               </a>
             ) : (
               <Link
                 key={link.name}
                 to={link.href}
-                onClick={() => setActiveLink(link.name)}
-                className="relative transition-colors"
-                style={{ color: activeLink === link.name ? "#5B4636" : "#7a6153" }}
+                onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
+                className="flex items-center justify-between px-6 py-4 text-sm font-semibold transition-colors duration-300"
+                style={{
+                  color: activeLink === link.name ? "#5B4636" : "#7a6153",
+                  borderBottom: "1px solid rgba(214,185,140,0.1)",
+                }}
               >
                 {link.name}
-                <span
-                  className="absolute -bottom-1 left-0 h-0.5 rounded-full transition-all duration-300"
-                  style={{
-                    width: activeLink === link.name ? "100%" : "0%",
-                    background: "linear-gradient(to right, #D6B98C, #b8936a)",
-                  }}
-                />
+                {activeLink === link.name && (
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
+                )}
               </Link>
             )
           )}
-        </div>
-
-        {/* CTA */}
-        <MagneticButton className="hidden md:inline-flex">
-          <a
-            href="#contact"
-            className="inline-flex items-center rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-[#5B4636] hover:scale-105 active:scale-95 transition-all duration-200"
-            style={{
-              background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",
-              boxShadow: "0 2px 12px rgba(184,147,106,0.35)",
-            }}
-          >
-            Contact Now
-          </a>
-        </MagneticButton>
-
-        {/* Mobile Hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg"
-          style={{ color: "#5B4636" }}
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <div
-        className={`md:hidden transition-all duration-300 overflow-hidden ${
-          isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
-        style={{
-          background: "#ffffff",
-          borderTop: "1px solid rgba(214,185,140,0.2)",
-        }}
-      >
-        {navLinks.map((link) =>
-          link.href.startsWith("#") ? (
+          <div className="px-5 pt-3 pb-5">
             <a
-              key={link.name}
-              href={link.href}
-              onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
-              className="flex items-center justify-between px-6 py-4 text-sm font-medium"
+              href="#contact"
+              className="flex items-center justify-center w-full rounded-full py-3.5 text-xs font-bold uppercase tracking-widest text-[#5B4636] active:scale-95 transition-transform"
               style={{
-                color: activeLink === link.name ? "#5B4636" : "#7a6153",
-                borderBottom: "1px solid rgba(214,185,140,0.12)",
+                background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",
+                boxShadow: "0 2px 12px rgba(184,147,106,0.3)",
               }}
+              onClick={() => setIsOpen(false)}
             >
-              {link.name}
-              {activeLink === link.name && (
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
-              )}
+              Contact Now
             </a>
-          ) : (
-            <Link
-              key={link.name}
-              to={link.href}
-              onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
-              className="flex items-center justify-between px-6 py-4 text-sm font-medium"
-              style={{
-                color: activeLink === link.name ? "#5B4636" : "#7a6153",
-                borderBottom: "1px solid rgba(214,185,140,0.12)",
-              }}
-            >
-              {link.name}
-              {activeLink === link.name && (
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
-              )}
-            </Link>
-          )
-        )}
-        <div className="px-5 pt-3 pb-5">
-          <a
-            href="#contact"
-            className="flex items-center justify-center w-full rounded-full py-3.5 text-xs font-bold uppercase tracking-widest text-[#5B4636] active:scale-95 transition-transform"
-            style={{
-              background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",
-              boxShadow: "0 2px 12px rgba(184,147,106,0.3)",
-            }}
-            onClick={() => setIsOpen(false)}
-          >
-            Contact Now
-          </a>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </motion.nav>
   );
 }

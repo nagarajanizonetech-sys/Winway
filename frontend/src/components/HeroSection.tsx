@@ -10,6 +10,8 @@ import api from "../services/api";
 import { HexagonBackground } from "../components/backgrounds/hexagon";
 import MagneticButton from "./animations/MagneticButton";
 import Reveal from "./animations/Reveal";
+import dell1Img from "../assets/bts-dell-db06250-laptop_1.webp";
+import dell2Img from "../assets/bts-dell-db16250-laptop.webp";
 
 interface HeroData {
   id: number; title: string; subtitle: string;
@@ -37,22 +39,22 @@ interface HeroSectionProps { onEnquire?: (title: string) => void; }
 const fallbackSlides: SlideItem[] = [
   { tag: "Special Offer", title: "Power. Performance.\nMade for Winners.",
     subtitle: "Experience next-level performance with the latest laptops built for gamers, creators and professionals.",
-    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=700&q=85&fit=crop",
+    image: dell1Img,
     alt: "Premium Laptop", button_text: "Explore Laptops", button_link: "#products",
     image_position: "right", enquiry: "Premium Laptop" },
   { tag: "Best Seller", title: "Dell XPS 15 — Built for\nCreators & Professionals",
     subtitle: "Ultra-thin design meets powerhouse internals for the modern creator.",
-    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=700&q=85&fit=crop",
+    image: dell2Img,
     alt: "Dell XPS 15", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "Dell XPS 15" },
   { tag: "Gaming Pick", title: "ASUS ROG Zephyrus G14\nRTX 4060 Powerhouse",
     subtitle: "Dominate every game with unmatched GPU performance and vivid display.",
-    image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=700&q=85&fit=crop",
+    image: dell1Img,
     alt: "ASUS ROG Gaming Laptop", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "ASUS ROG Zephyrus G14" },
   { tag: "Office Ready", title: "HP EliteBook 840 G10\nSlim, Secure & Fast",
     subtitle: "Enterprise-grade security and performance in an ultra-portable form.",
-    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=700&q=85&fit=crop",
+    image: dell2Img,
     alt: "HP EliteBook", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "HP EliteBook 840 G10" },
 ];
@@ -154,6 +156,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const [isMobile, setIsMobile]   = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
@@ -250,24 +253,22 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         className="relative overflow-hidden pt-[108px] pb-8 sm:pb-10 lg:pb-12"
         style={{
           background: `linear-gradient(160deg, ${C.white} 0%, ${C.sand} 55%, #EDE0CC 100%)`,
+          clipPath: "inset(0)",
         }}
       >
-        {/* Hexagon background restricted to the left side and faded out */}
-        <HexagonBackground 
-          className="absolute inset-y-0 left-0 w-full sm:w-[50%] lg:w-[42%] z-0 pointer-events-none"
-          style={{
-            maskImage: "linear-gradient(to right, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0) 100%)",
-            WebkitMaskImage: "linear-gradient(to right, rgba(0,0,0,1) 30%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0) 100%)",
-          }}
-          hexagonSize={64}
-          hexagonMargin={6}
-          hexagonProps={{
-            style: {
-              backgroundColor: "rgba(201, 169, 110, 0.06)",
-              borderColor: "rgba(201, 169, 110, 0.15)",
-            }
-          }}
-        />
+        {/* Hexagon background covering the full Hero Section block */}
+        <div 
+          className={`${isMobile ? "absolute" : "fixed"} inset-0 w-full h-full z-0 pointer-events-none`}
+        >
+          <HexagonBackground 
+            className="w-full h-full"
+            style={{ 
+              opacity: isMobile ? 0.35 : 0.55,
+            }}
+            hexagonSize={64}
+            hexagonMargin={6}
+          />
+        </div>
 
         <div className="absolute pointer-events-none"
           style={{ top:-60, right:"18%", width:460, height:460, background:"rgba(214,185,140,0.26)", borderRadius:"50%", filter:"blur(120px)" }}/>
@@ -423,7 +424,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   })()}
 
                   {/* IMAGE column */}
-                  <div className="order-1 sm:order-2 sm:col-span-1 lg:col-span-4 flex items-center justify-center relative h-[210px] sm:h-full">
+                  <div className="order-1 sm:order-2 sm:col-span-1 lg:col-span-4 flex items-center justify-center relative h-[280px] sm:h-full">
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div style={{
                         width:"65%", height:"65%",
@@ -455,13 +456,13 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                         transition={shouldReduceMotion ? {} : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
                         className="w-full flex justify-center"
                       >
-                        {slide.image && !slide.image.includes("unsplash") ? (
+                        {slide.image ? (
                           <img src={slide.image} alt={slide.alt}
-                            className="w-full max-w-[185px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
+                            className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
                             style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
                           />
                         ) : (
-                          <div className="max-h-[185px] sm:max-h-none overflow-hidden flex items-center justify-center">
+                          <div className="max-h-[250px] sm:max-h-none overflow-hidden flex items-center justify-center">
                             <LaptopIllustration/>
                           </div>
                         )}
@@ -517,11 +518,11 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   </motion.div>
                 </div>
 
-                {/* Mobile/tablet: spec scroll + dots */}
+                {/* Mobile/tablet: specs grid + dots */}
                 <div className="mt-3 lg:hidden">
                   <motion.div
                     key={`specs-mobile-${current}`}
-                    className="-mx-5 sm:-mx-6 flex gap-2 overflow-x-auto px-5 sm:px-6 pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none]"
+                    className="grid grid-cols-2 gap-2 w-full"
                     initial="hidden"
                     animate="visible"
                     variants={specsContainer}
@@ -530,16 +531,16 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       <motion.div
                         key={name}
                         variants={specItem}
-                        className="flex flex-shrink-0 items-center gap-2 rounded-xl border px-3 py-2 min-w-[150px]"
+                        className="flex items-center gap-2.5 rounded-xl border px-3 py-2 min-w-0"
                         style={specPill}
                       >
                         <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg"
                           style={{ background:C.sand }}>
                           <Icon size={11} color={C.gold2} strokeWidth={1.5}/>
                         </div>
-                        <div className="flex flex-col leading-tight">
-                          <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color:C.brown2 }}>{name}</span>
-                          <span className="whitespace-nowrap text-[10px]" style={{ color:C.brown3 }}>{val}</span>
+                        <div className="flex flex-col leading-tight min-w-0">
+                          <span className="text-[11px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
+                          <span className="text-[10px] truncate" style={{ color:C.brown3 }}>{val}</span>
                         </div>
                       </motion.div>
                     ))}
@@ -644,10 +645,6 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   <div>
                     <p className="mb-1 text-base font-bold leading-6" style={{ color:C.brown2 }}>{title}</p>
                     <p className="text-sm leading-6" style={{ color:C.brown3 }}>{desc}</p>
-                  </div>
-                  <div className="mt-auto ml-auto flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{ background:C.sand }}>
-                    <ArrowRight size={12} color={C.gold2} strokeWidth={2}/>
                   </div>
                 </div>
               ))}

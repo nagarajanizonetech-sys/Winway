@@ -40,12 +40,17 @@ export default function ProductCard({ product, onEnquire, onClick }: ProductCard
   const rotateX = useTransform(springY, [-0.5, 0.5], [5, -5]);
   const rotateY = useTransform(springX, [-0.5, 0.5], [-6, 6]);
 
+  const rectRef = useRef<DOMRect | null>(null);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (shouldReduceMotion || window.innerWidth < 768 || (typeof window !== "undefined" && window.matchMedia("(hover: none)").matches)) return;
     const el = cardRef.current;
     if (!el) return;
 
-    const rect = el.getBoundingClientRect();
+    if (!rectRef.current) {
+      rectRef.current = el.getBoundingClientRect();
+    }
+    const rect = rectRef.current;
     const width = rect.width;
     const height = rect.height;
 
@@ -57,6 +62,7 @@ export default function ProductCard({ product, onEnquire, onClick }: ProductCard
   };
 
   const handleMouseLeave = () => {
+    rectRef.current = null;
     x.set(0);
     y.set(0);
   };
@@ -100,6 +106,7 @@ export default function ProductCard({ product, onEnquire, onClick }: ProductCard
             <img
               src={product.image_url.split(",")[0]}
               alt={product.name}
+              loading="lazy"
               className="w-full h-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-[1.06]"
               style={{
                 transform: shouldReduceMotion ? "none" : "translateZ(30px)",

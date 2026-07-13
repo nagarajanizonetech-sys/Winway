@@ -12,6 +12,7 @@ import {
   HardDrive,
   Headphones,
 } from "lucide-react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import ServiceCard from "./ServiceCard";
 import MagneticButton from "./animations/MagneticButton";
@@ -97,6 +98,9 @@ interface ServicesSectionProps {
 }
 
 export default function ServicesSection({ onEnquire }: ServicesSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayedServices = isExpanded ? MOCK_SERVICES : MOCK_SERVICES.slice(0, 4);
+
   return (
     <section id="services" className="py-36 bg-[#FCF8F2] relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -127,7 +131,7 @@ export default function ServicesSection({ onEnquire }: ServicesSectionProps) {
             }
           }}
         >
-          {MOCK_SERVICES.map((service) => (
+          {displayedServices.map((service) => (
             <ServiceCard
               key={service.id}
               title={service.title}
@@ -142,9 +146,12 @@ export default function ServicesSection({ onEnquire }: ServicesSectionProps) {
         {/* View all CTA */}
         <div className="text-center mt-12">
           <MagneticButton>
-            <button className="inline-flex items-center gap-2 rounded-full border border-[#D6B98C] px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5B4636] transition-all duration-300 hover:bg-[#5B4636] hover:text-white hover:border-[#5B4636] active:scale-95">
-              View All Services
-              <span className="inline-block">→</span>
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="inline-flex items-center gap-2 rounded-full border border-[#D6B98C] px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5B4636] transition-all duration-300 hover:bg-[#5B4636] hover:text-white hover:border-[#5B4636] active:scale-95"
+            >
+              {isExpanded ? "Show Less Services" : "View All Services"}
+              <span className="inline-block transition-transform duration-300" style={{ transform: isExpanded ? "rotate(-90deg)" : "none" }}>→</span>
             </button>
           </MagneticButton>
         </div>

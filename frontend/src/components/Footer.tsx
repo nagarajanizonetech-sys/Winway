@@ -1,6 +1,6 @@
 import { Mail, MapPin, Phone } from "lucide-react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import logo from "../assets/winway1.png";
+import logo from "../assets/winway1.webp";
 
 export default function Footer() {
   const shouldReduceMotion = useReducedMotion();
