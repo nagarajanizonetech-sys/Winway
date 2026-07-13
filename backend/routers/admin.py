@@ -10,6 +10,7 @@ import io
 import models, schemas, crud
 from database import get_db
 from utils import auth
+from utils.cloudinary import upload_to_cloudinary, delete_from_cloudinary
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="admin/login")
@@ -84,15 +85,9 @@ async def create_product_with_image(
         uploaded_urls = []
         for img in images:
             if img.filename:
-                file_extension = img.filename.split(".")[-1]
-                file_name = f"{uuid.uuid4()}.{file_extension}"
-                file_path = os.path.join(UPLOAD_DIR, file_name)
-
-                with open(file_path, "wb") as f:
-                    content = await img.read()
-                    f.write(content)
-
-                uploaded_urls.append(f"http://localhost:8000/uploads/{file_name}")
+                secure_url = upload_to_cloudinary(img, folder="winway/products")
+                if secure_url:
+                    uploaded_urls.append(secure_url)
         
         if uploaded_urls:
             image_url = ",".join(uploaded_urls)
@@ -162,17 +157,14 @@ async def update_product_with_image(
         uploaded_urls = []
         for img in images:
             if img.filename:
-                file_extension = img.filename.split(".")[-1]
-                file_name = f"{uuid.uuid4()}.{file_extension}"
-                file_path = os.path.join(UPLOAD_DIR, file_name)
-
-                with open(file_path, "wb") as f:
-                    content = await img.read()
-                    f.write(content)
-
-                uploaded_urls.append(f"http://localhost:8000/uploads/{file_name}")
+                secure_url = upload_to_cloudinary(img, folder="winway/products")
+                if secure_url:
+                    uploaded_urls.append(secure_url)
         
         if uploaded_urls:
+            if product.image_url:
+                for old_url in product.image_url.split(","):
+                    delete_from_cloudinary(old_url.strip())
             update_data["image_url"] = ",".join(uploaded_urls)
 
     db_product = crud.update_product(db, product_id, update_data)
@@ -215,17 +207,10 @@ async def create_hero_section_endpoint(
     else:
         image_position = "left"
 
-    # 3. Save file to disk in uploads/herosection
-    file_extension = image.filename.split(".")[-1]
-    file_name = f"{uuid.uuid4()}.{file_extension}"
-    UPLOAD_HERO_DIR = os.path.join("uploads", "herosection")
-    os.makedirs(UPLOAD_HERO_DIR, exist_ok=True)
-    file_path = os.path.join(UPLOAD_HERO_DIR, file_name)
-
-    with open(file_path, "wb") as f:
-        f.write(image_bytes)
-
-    image_url = f"http://localhost:8000/uploads/herosection/{file_name}"
+    # 3. Upload file directly to Cloudinary
+    image_url = upload_to_cloudinary(image_bytes, folder="winway/herosection")
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
 
     hero_data = schemas.HeroSectionCreate(
         title=title,
@@ -304,27 +289,24 @@ async def update_hero_section_endpoint(
         else:
             update_data["image_position"] = "left"
 
-        # 3. Save new file
-        file_extension = image.filename.split(".")[-1]
-        file_name = f"{uuid.uuid4()}.{file_extension}"
-        UPLOAD_HERO_DIR = os.path.join("uploads", "herosection")
-        os.makedirs(UPLOAD_HERO_DIR, exist_ok=True)
-        file_path = os.path.join(UPLOAD_HERO_DIR, file_name)
+        # 3. Upload new file directly to Cloudinary
+        new_image_url = upload_to_cloudinary(image_bytes, folder="winway/herosection")
+        if not new_image_url:
+            raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
 
-        with open(file_path, "wb") as f:
-            f.write(image_bytes)
-
-        # 4. Clean up old image file from disk
+        # 4. Clean up old image from Cloudinary and disk
         if hero.image_url:
+            delete_from_cloudinary(hero.image_url)
             try:
                 old_filename = hero.image_url.split("/")[-1]
+                UPLOAD_HERO_DIR = os.path.join("uploads", "herosection")
                 old_file_path = os.path.join(UPLOAD_HERO_DIR, old_filename)
                 if os.path.exists(old_file_path):
                     os.remove(old_file_path)
             except Exception as ex:
                 print(f"Failed to delete old image file: {ex}")
 
-        update_data["image_url"] = f"http://localhost:8000/uploads/herosection/{file_name}"
+        update_data["image_url"] = new_image_url
 
     db_hero = crud.update_hero_section(db, hero_id, update_data)
     return db_hero
@@ -340,8 +322,9 @@ def delete_hero_section_endpoint(
     if not hero:
         raise HTTPException(status_code=404, detail="Hero section not found")
 
-    # Clean up image from disk
+    # Clean up image from Cloudinary and disk
     if hero.image_url:
+        delete_from_cloudinary(hero.image_url)
         try:
             old_filename = hero.image_url.split("/")[-1]
             UPLOAD_HERO_DIR = os.path.join("uploads", "herosection")
