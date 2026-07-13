@@ -305,8 +305,6 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                 <div className="sm:flex-1 sm:min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-3 lg:gap-5 items-center">
                   {/* TEXT column */}
                   {(() => {
-                    let headingWordCounter = 0;
-                    const totalHeadingWords = slide.title.split(/\s+/).filter(Boolean).length;
                     const titleLines = slide.title.split("\n");
                     return (
                       <motion.div
@@ -327,6 +325,9 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                         </motion.span>
 
                         <motion.h1
+                          initial={{ opacity: 0, y: 25 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                           className="m-0 font-black leading-[1.08] tracking-[-0.025em]"
                           style={{
                             fontFamily: "'Playfair Display', Georgia, serif",
@@ -335,31 +336,19 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           }}
                         >
                           {titleLines.map((line, lineIdx) => {
-                            const words = line.split(" ");
                             const isGold = lineIdx === 1;
                             return (
-                              <span key={lineIdx} className={lineIdx > 0 ? "block mt-1" : "block"}>
-                                {words.map((word) => {
-                                  const currentIdx = headingWordCounter++;
-                                  const delay = currentIdx * 0.08;
-                                  return (
-                                    <motion.span
-                                      key={`${current}-${currentIdx}`}
-                                      className="inline-block mr-[0.25em]"
-                                      initial={{ opacity: 0, y: 70 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
-                                      style={isGold ? {
-                                        background: `linear-gradient(135deg, ${C.gold} 0%, ${C.gold2} 100%)`,
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        backgroundClip: "text",
-                                      } : undefined}
-                                    >
-                                      {word}
-                                    </motion.span>
-                                  );
-                                })}
+                              <span 
+                                key={lineIdx} 
+                                className={lineIdx > 0 ? "block mt-1" : "block"}
+                                style={isGold ? {
+                                  background: `linear-gradient(135deg, ${C.gold} 0%, ${C.gold2} 100%)`,
+                                  WebkitBackgroundClip: "text",
+                                  WebkitTextFillColor: "transparent",
+                                  backgroundClip: "text",
+                                } : undefined}
+                              >
+                                {line}
                               </span>
                             );
                           })}
@@ -369,7 +358,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           <motion.p
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.12 + totalHeadingWords * 0.06 + 0.08, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
                             className="line-clamp-2 leading-6"
                             style={{
                               color: C.brown3,
@@ -383,9 +372,9 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
                         {/* CTAs — names unchanged, kept exactly as original */}
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
+                          initial={{ opacity: 0, scale: 0.97 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.4, delay: 0.12 + totalHeadingWords * 0.06 + 0.22, ease: [0.22, 1, 0.36, 1] }}
+                          transition={{ duration: 0.4, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                           className="flex flex-wrap items-center gap-2"
                         >
                           <MagneticButton>

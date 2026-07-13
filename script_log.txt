@@ -1,3 +1,82 @@
-Optimizing logo size...
-Pillow is available
-Resized winway1.png -> winway1.webp: 497.6KB -> 18.8KB (Saved 96.2%)
+Starting DB image optimization script...
+Dependencies loaded successfully
+
+Processing Hero Sections...
+Checking Hero ID 4: Victus Gaming Laptop — Built t...
+File is already optimized or not supported: herosection/a136cf6e-4c54-4cac-8f6e-9edda1a99fbe.webp
+Checking Hero ID 3: Dell Inspiron 15 — Everyday Pe...
+Converted herosection/53405560-9e5d-4eff-a370-75a66526cb40.png -> herosection/53405560-9e5d-4eff-a370-75a66526cb40.webp: 65.0KB -> 14.9KB (Saved 77.1%)
+Removed original raw file: herosection/53405560-9e5d-4eff-a370-75a66526cb40.png
+Updating Hero ID 3 URL to: http://localhost:8000/uploads/herosection/53405560-9e5d-4eff-a370-75a66526cb40.webp
+Checking Hero ID 2: EliteBook Laptop Range — Work ...
+Converted herosection/9591c1df-cdd2-4828-ac81-26a578ea8726.png -> herosection/9591c1df-cdd2-4828-ac81-26a578ea8726.webp: 189.7KB -> 17.7KB (Saved 90.7%)
+Removed original raw file: herosection/9591c1df-cdd2-4828-ac81-26a578ea8726.png
+Updating Hero ID 2 URL to: http://localhost:8000/uploads/herosection/9591c1df-cdd2-4828-ac81-26a578ea8726.webp
+Checking Hero ID 7: HP EliteBook X Flip G2i Next G...
+Resized herosection/97363a7d-eea8-48fe-b4f7-28c6012bc4d0.png to 768x652
+Converted herosection/97363a7d-eea8-48fe-b4f7-28c6012bc4d0.png -> herosection/97363a7d-eea8-48fe-b4f7-28c6012bc4d0.webp: 4407.2KB -> 28.4KB (Saved 99.4%)
+Removed original raw file: herosection/97363a7d-eea8-48fe-b4f7-28c6012bc4d0.png
+Updating Hero ID 7 URL to: http://localhost:8000/uploads/herosection/97363a7d-eea8-48fe-b4f7-28c6012bc4d0.webp
+Checking Hero ID 8: YOGA pro 9i Aura
+Available No...
+File is already optimized or not supported: herosection/ed58df78-6cf4-487e-afc2-a2edd98dac5d.webp
+
+Processing Products...
+Checking Product ID 10: YOGA pro 9i Aura...
+File is already optimized or not supported: ee5c98bb-8b6f-4855-98c8-14e11758d428.webp
+File is already optimized or not supported: 2f80d229-8a81-4cc0-b535-1c41097570eb.webp
+File is already optimized or not supported: c91b8e7f-8354-4954-a24a-46bbb63146c4.webp
+File is already optimized or not supported: 66028a5c-7c64-44a6-a00b-b55f8b85198c.webp
+File is already optimized or not supported: ac637c10-4d31-4b38-a7a3-0afb00cbc347.webp
+Checking Product ID 4: Alienware 16 Aurora Gaming Laptop...
+Converted 9fca59ea-09cd-4fb5-979c-94c9ad5bad03.png -> 9fca59ea-09cd-4fb5-979c-94c9ad5bad03.webp: 286.5KB -> 25.8KB (Saved 91.0%)
+Removed original raw file: 9fca59ea-09cd-4fb5-979c-94c9ad5bad03.png
+Updating Product ID 4 URL list
+Checking Product ID 2: Dell 15...
+Converted 8815c398-0f55-4167-a167-2ec68123efd8.png -> 8815c398-0f55-4167-a167-2ec68123efd8.webp: 65.0KB -> 14.9KB (Saved 77.1%)
+Removed original raw file: 8815c398-0f55-4167-a167-2ec68123efd8.png
+Updating Product ID 2 URL list
+Checking Product ID 3: Victus Gaming Laptop...
+Converted 05172eef-0ea0-4933-b708-46a2da300a78.png -> 05172eef-0ea0-4933-b708-46a2da300a78.webp: 189.7KB -> 17.7KB (Saved 90.7%)
+Removed original raw file: 05172eef-0ea0-4933-b708-46a2da300a78.png
+Updating Product ID 3 URL list
+Checking Product ID 5: HyperX OMEN 16 Gaming Laptop...
+Resized 35e0f6d5-8604-4706-bfbd-b63655e937cb.png to 768x652
+Converted 35e0f6d5-8604-4706-bfbd-b63655e937cb.png -> 35e0f6d5-8604-4706-bfbd-b63655e937cb.webp: 23497.7KB -> 29.9KB (Saved 99.9%)
+Removed original raw file: 35e0f6d5-8604-4706-bfbd-b63655e937cb.png
+Resized aa9336bb-83e2-44c9-9e83-8323ac159039.png to 768x652
+Converted aa9336bb-83e2-44c9-9e83-8323ac159039.png -> aa9336bb-83e2-44c9-9e83-8323ac159039.webp: 17752.8KB -> 36.1KB (Saved 99.8%)
+Removed original raw file: aa9336bb-83e2-44c9-9e83-8323ac159039.png
+Resized 1aa296fc-4222-44f1-8272-a0e50fe53e4e.png to 768x652
+Converted 1aa296fc-4222-44f1-8272-a0e50fe53e4e.png -> 1aa296fc-4222-44f1-8272-a0e50fe53e4e.webp: 17647.8KB -> 35.6KB (Saved 99.8%)
+Removed original raw file: 1aa296fc-4222-44f1-8272-a0e50fe53e4e.png
+Resized c68caa26-8a11-43b3-9d34-67f0fa21f508.png to 768x652
+Converted c68caa26-8a11-43b3-9d34-67f0fa21f508.png -> c68caa26-8a11-43b3-9d34-67f0fa21f508.webp: 1710.3KB -> 15.2KB (Saved 99.1%)
+Removed original raw file: c68caa26-8a11-43b3-9d34-67f0fa21f508.png
+Updating Product ID 5 URL list
+Checking Product ID 6: HyperX OMEN 15 Gaming Laptop...
+File is already optimized or not supported: a0e640f6-fc61-480f-9261-2d867f210c58.webp
+File is already optimized or not supported: eded8b4b-fc7c-4d4b-9e0c-69fbafe39c6d.webp
+File is already optimized or not supported: f66a6a0e-756f-4b3b-934d-a0582ca755eb.webp
+File is already optimized or not supported: a77c07c9-a233-4034-8163-41276176dc8d.webp
+File is already optimized or not supported: a524a48a-0b4b-4853-b9d1-5a2cc1832233.webp
+Checking Product ID 8: OmniBook 7 14 inch Laptop Next Gen AI PC...
+File is already optimized or not supported: 543b7e34-5914-4014-959d-3598fc37b8c9.webp
+File is already optimized or not supported: cd449e3e-2188-4145-bc58-677d5150a4dc.webp
+File is already optimized or not supported: cbd6bea5-1415-4456-bd32-5b71cecf0bcd.webp
+File is already optimized or not supported: 2b7a2878-d906-4dd8-a1f3-ebaf7a79c391.webp
+File is already optimized or not supported: f07312bb-648c-494d-82b2-824f275a9390.webp
+Checking Product ID 7: HP EliteBook X Flip G2i Next Gen AI ...
+File is already optimized or not supported: dd2bd081-5f0e-487e-803a-5749d4c6409b.webp
+File is already optimized or not supported: 1ba084cb-607f-4836-8811-0c2bf1a2cd2d.webp
+File is already optimized or not supported: 8019a52f-e827-4436-a987-317acd326306.webp
+File is already optimized or not supported: 82f0f7dd-e893-4c7a-819e-d3d869324557.webp
+File is already optimized or not supported: c753f214-3b9a-4d19-88c1-50af5ae92748.webp
+Checking Product ID 9: ThinkPad T14s...
+File is already optimized or not supported: 4d5fbec7-c08c-40c5-9475-2fffa5b77e0b.webp
+File is already optimized or not supported: 46ddfad6-5e67-4b5b-8209-a9f60b35ec90.webp
+File is already optimized or not supported: 95e91bc2-8e8d-481c-82b5-370800de4968.webp
+File is already optimized or not supported: aee8f614-b5be-43c7-843f-1bf1d558341b.webp
+File is already optimized or not supported: 62ba2eea-6f23-4516-9b1b-4ff36bc7c3bf.webp
+
+Image database optimization completed successfully
