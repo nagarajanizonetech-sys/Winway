@@ -18,19 +18,20 @@ function AppLayout() {
       <main className="flex-grow">
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-screen" style={{ background: "#F3E9DC" }}>
-            <div className="h-9 w-9 animate-spin rounded-full border-4" style={{ borderColor: "#D6B98C", borderTopColor: "transparent" }}/>
+            <div className="h-9 w-9 animate-spin rounded-full border-4" style={{ borderColor: "#D6B98C", borderTopColor: "transparent" }} />
           </div>
         }>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/test" element={<h1>Test Route Working</h1>} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route 
-              path="/admin/dashboard" 
+            <Route
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute>
                   <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Routes>
         </Suspense>
