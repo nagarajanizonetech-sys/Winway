@@ -18,8 +18,10 @@ def upload_to_cloudinary(file_data, folder="winway"):
     Returns the secure URL of the uploaded asset, or None if it fails.
     """
     try:
-        # Check if UploadFile
-        if isinstance(file_data, UploadFile):
+        # Check if UploadFile (contains a 'file' attribute)
+        if hasattr(file_data, "file"):
+            if hasattr(file_data.file, "seek"):
+                file_data.file.seek(0)
             file_to_upload = file_data.file
         elif isinstance(file_data, bytes):
             file_to_upload = io.BytesIO(file_data)
