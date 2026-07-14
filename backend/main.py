@@ -11,8 +11,12 @@ import models
 from database import engine
 from routers import products, services, enquiries, admin, hero
 
-# Create database tables
-models.Base.metadata.create_all(bind=engine)
+# Initialize database and default admin
+from init_db import init_db
+try:
+    init_db()
+except Exception as e:
+    print(f"Database initialization failed: {e}")
 
 try:
     import migrate_hero
