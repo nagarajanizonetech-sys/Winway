@@ -39,11 +39,13 @@ export default function ProductDetailsModal({
   onEnquire,
 }: ProductDetailsModalProps) {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Reset slide index when modal is opened for a different product
   useEffect(() => {
     if (isOpen) {
       setActiveIdx(0);
+      setIsZoomed(false);
     }
   }, [isOpen, product]);
 
@@ -76,8 +78,9 @@ export default function ProductDetailsModal({
 
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-[#35251A]/60 backdrop-blur-xl selection:bg-[#D6B98C] selection:text-[#5B4636]">
+    <>
+      <AnimatePresence>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-[#35251A]/60 backdrop-blur-xl selection:bg-[#D6B98C] selection:text-[#5B4636]">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -132,11 +135,12 @@ export default function ProductDetailsModal({
                     <motion.img
                       src={imageUrls[activeIdx]}
                       alt={`${product.name} gallery image ${activeIdx + 1}`}
-                      className="max-h-[220px] sm:max-h-[280px] md:max-h-[350px] w-auto rounded-2xl object-contain select-none shadow-[0_15px_30px_rgba(91,70,54,0.08)]"
+                      className="max-h-[220px] sm:max-h-[280px] md:max-h-[350px] w-auto rounded-2xl object-contain select-none shadow-[0_15px_30px_rgba(91,70,54,0.08)] cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.25 }}
+                      onTap={() => setIsZoomed(true)}
                     />
                   </motion.div>
                 </AnimatePresence>
@@ -189,7 +193,7 @@ export default function ProductDetailsModal({
           </div>
 
           {/* Right Column - Product details */}
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
             <div>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#D6B98C]/95 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#5B4636] shadow-sm border border-[rgba(214,185,140,0.3)] mb-2.5">
                 <Sparkles className="h-2.5 w-2.5 text-[#5B4636] animate-pulse" />
@@ -220,7 +224,7 @@ export default function ProductDetailsModal({
             </div>
 
             {/* Specifications list */}
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 flex-1 overflow-y-auto pr-1 min-h-0">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#D6B98C]">Technical Specifications</h3>
               
               <div className="grid grid-cols-1 gap-2">
@@ -280,5 +284,68 @@ export default function ProductDetailsModal({
         </motion.div>
       </div>
     </AnimatePresence>
+
+    {/* Lightbox / Zoom Overlay */}
+    <AnimatePresence>
+      {isZoomed && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsZoomed(false)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#35251A]/95 backdrop-blur-2xl cursor-zoom-out p-4"
+        >
+          {/* Close Button */}
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsZoomed(false);
+            }}
+            className="absolute right-6 top-6 z-[110] rounded-full border border-[rgba(214,185,140,0.25)] bg-[#FFFDF7]/10 p-3 text-[#FFFDF7] hover:bg-[#FFFDF7]/20 transition shadow-lg"
+          >
+            <X className="h-6 w-6" />
+          </motion.button>
+
+          {/* Navigation Arrows inside Zoom View */}
+          {imageUrls.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrev();
+                }}
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-[110] flex h-12 w-12 items-center justify-center rounded-full bg-[#FFFDF7]/10 border border-[rgba(214,185,140,0.2)] text-[#FFFDF7] hover:bg-[#FFFDF7]/25 transition"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNext();
+                }}
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-[110] flex h-12 w-12 items-center justify-center rounded-full bg-[#FFFDF7]/10 border border-[rgba(214,185,140,0.2)] text-[#FFFDF7] hover:bg-[#FFFDF7]/25 transition"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+
+          <motion.img
+            key={activeIdx}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 150 }}
+            src={imageUrls[activeIdx]}
+            alt={`${product.name} zoomed image`}
+            className="max-h-[90vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </>
   );
 }

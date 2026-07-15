@@ -85,12 +85,14 @@ export function HexagonBackground({
             cell.style.transform = `scale(${1 + influence * 0.08})`;
             cell.style.boxShadow = `0 0 ${influence * 15}px rgba(201, 169, 110, ${influence * 0.3})`;
             cell.style.zIndex = "1";
+            cell.style.opacity = `${0.45 + influence * 0.55}`;
           } else if (cell.style.transform !== "") {
             cell.style.backgroundColor = "";
             cell.style.borderColor = "";
             cell.style.transform = "";
             cell.style.boxShadow = "";
             cell.style.zIndex = "";
+            cell.style.opacity = "";
           }
         });
       });
@@ -113,6 +115,7 @@ export function HexagonBackground({
           cell.style.transform = "";
           cell.style.boxShadow = "";
           cell.style.zIndex = "";
+          cell.style.opacity = "";
         }
       });
     };
@@ -134,11 +137,19 @@ export function HexagonBackground({
     "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
 
   const cells: { x: number; y: number; key: string; delay: number }[] = [];
+  const midRow = rows / 2;
+  const midCol = cols / 2;
   for (let row = -1; row < rows + 1; row++) {
     for (let col = -1; col < cols + 1; col++) {
       const x = col * colSpacing + (row % 2 === 1 ? colSpacing / 2 : 0);
       const y = row * rowSpacing;
-      cells.push({ x, y, key: `${row}-${col}`, delay: ((row + col + 100) % 8) * 0.15 });
+      
+      const dx = col - midCol;
+      const dy = row - midRow;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const delay = dist * 0.22;
+      
+      cells.push({ x, y, key: `${row}-${col}`, delay });
     }
   }
 
@@ -151,16 +162,24 @@ export function HexagonBackground({
     >
       <style>
         {`
-          @keyframes hexPulse-${id} {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+          @keyframes hexWave-${id} {
+            0% {
+              opacity: 0.45;
+            }
+            15% {
+              opacity: 1.0;
+            }
+            30%, 100% {
+              opacity: 0.45;
+            }
           }
           .hex-cell-${id} {
-            animation: hexPulse-${id} 3.5s ease-in-out infinite;
+            animation: hexWave-${id} 5s ease-in-out infinite;
           }
           .hex-cell-${id}:hover {
             background-color: rgba(150, 111, 51, 0.55) !important;
             border-color: rgba(150, 111, 51, 0.9) !important;
+            opacity: 1 !important;
           }
         `}
       </style>

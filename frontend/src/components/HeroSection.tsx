@@ -10,8 +10,6 @@ import api from "../services/api";
 import { HexagonBackground } from "../components/backgrounds/hexagon";
 import MagneticButton from "./animations/MagneticButton";
 import Reveal from "./animations/Reveal";
-import dell1Img from "../assets/bts-dell-db06250-laptop_1.webp";
-import dell2Img from "../assets/bts-dell-db16250-laptop.webp";
 
 interface HeroData {
   id: number; title: string; subtitle: string;
@@ -39,22 +37,22 @@ interface HeroSectionProps { onEnquire?: (title: string) => void; }
 const fallbackSlides: SlideItem[] = [
   { tag: "Special Offer", title: "Power. Performance.\nMade for Winners.",
     subtitle: "Experience next-level performance with the latest laptops built for gamers, creators and professionals.",
-    image: dell1Img,
+    image: "",
     alt: "Premium Laptop", button_text: "Explore Laptops", button_link: "#products",
     image_position: "right", enquiry: "Premium Laptop" },
   { tag: "Best Seller", title: "Dell XPS 15 — Built for\nCreators & Professionals",
     subtitle: "Ultra-thin design meets powerhouse internals for the modern creator.",
-    image: dell2Img,
+    image: "",
     alt: "Dell XPS 15", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "Dell XPS 15" },
   { tag: "Gaming Pick", title: "ASUS ROG Zephyrus G14\nRTX 4060 Powerhouse",
     subtitle: "Dominate every game with unmatched GPU performance and vivid display.",
-    image: dell1Img,
+    image: "",
     alt: "ASUS ROG Gaming Laptop", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "ASUS ROG Zephyrus G14" },
   { tag: "Office Ready", title: "HP EliteBook 840 G10\nSlim, Secure & Fast",
     subtitle: "Enterprise-grade security and performance in an ultra-portable form.",
-    image: dell2Img,
+    image: "",
     alt: "HP EliteBook", button_text: "Browse Products", button_link: "#products",
     image_position: "right", enquiry: "HP EliteBook 840 G10" },
 ];
@@ -77,53 +75,6 @@ const C = {
   brown: "#5B3E28", brown2: "#3D2812", brown3: "#7A5C3E",
   sand: "#F5EDE0", sandLight: "#F9F4ED", white: "#FFFDF7",
 };
-
-function LaptopIllustration() {
-  return (
-    <svg viewBox="0 0 440 300" fill="none" xmlns="http://www.w3.org/2000/svg"
-      className="w-full max-w-[180px] sm:max-w-[240px] lg:max-w-[300px] xl:max-w-[330px]"
-      style={{ filter: "drop-shadow(0 20px 40px rgba(91,70,54,0.18))" }}>
-      <defs>
-        <linearGradient id="sgH" x1="55" y1="22" x2="385" y2="228" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#D6B98C" stopOpacity=".09"/>
-          <stop offset="100%" stopColor="#C9A96E" stopOpacity=".03"/>
-        </linearGradient>
-        <radialGradient id="ggH" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#C9A96E" stopOpacity=".18"/>
-          <stop offset="100%" stopColor="#C9A96E" stopOpacity="0"/>
-        </radialGradient>
-      </defs>
-      <ellipse cx="220" cy="265" rx="185" ry="28" fill="url(#ggH)"/>
-      <rect x="42" y="12" width="356" height="228" rx="14" fill="#2a1f14" stroke="#5B3E28" strokeWidth="1.5"/>
-      <rect x="55" y="24" width="330" height="204" rx="8" fill="#120c07"/>
-      <rect x="55" y="24" width="330" height="204" rx="8" fill="url(#sgH)"/>
-      <rect x="68" y="36" width="304" height="180" rx="5" fill="#0e0804"/>
-      <rect x="82" y="48" width="180" height="4" rx="2" fill="#c9a96e" opacity=".55"/>
-      <rect x="82" y="57" width="110" height="2.5" rx="1.5" fill="#7a5c3e" opacity=".45"/>
-      <rect x="82" y="72" width="290" height="72" rx="7" fill="#1a0f07" opacity=".85"/>
-      <rect x="94" y="83" width="110" height="4.5" rx="2" fill="#c9a96e" opacity=".65"/>
-      <rect x="94" y="93" width="80" height="3" rx="1.5" fill="#7a5c3e" opacity=".5"/>
-      <rect x="94" y="105" width="88" height="9" rx="4.5" fill="#5B3E28" opacity=".85"/>
-      {[210,229,248,267,286].map((x,i)=><rect key={x} x={x} y={[88,95,84,92,79][i]} width="13" height={[32,25,36,28,41][i]} rx="2.5" fill={["#c9a96e","#a07840","#d6b98c","#c9a96e","#a07840"][i]} opacity={[.5,.5,.6,.45,.55][i]}/>)}
-      <rect x="82" y="156" width="148" height="2.5" rx="1.5" fill="#7a5c3e" opacity=".3"/>
-      <rect x="82" y="165" width="104" height="2.5" rx="1.5" fill="#7a5c3e" opacity=".25"/>
-      <rect x="82" y="174" width="124" height="2.5" rx="1.5" fill="#7a5c3e" opacity=".2"/>
-      <rect x="250" y="152" width="108" height="52" rx="7" fill="#1a0f07" opacity=".8"/>
-      <circle cx="304" cy="168" r="13" fill="none" stroke="#c9a96e" strokeWidth="1.5" opacity=".5"/>
-      <circle cx="304" cy="168" r="7" fill="#c9a96e" opacity=".18"/>
-      <circle cx="220" cy="18" r="3" fill="#3d2812"/>
-      <circle cx="220" cy="18" r="1.5" fill="#5B3E28"/>
-      <rect x="22" y="240" width="396" height="18" rx="4" fill="#3d2812"/>
-      <rect x="0" y="258" width="440" height="10" rx="5" fill="#5B3E28"/>
-      <g opacity=".3" fill="#c9a96e">
-        {[68,80,92,104,116,128].map(x=><rect key={x} x={x} y="250" width="8" height="5" rx="1"/>)}
-        <rect x="180" y="250" width="80" height="5" rx="1"/>
-        {[290,302,314,326].map(x=><rect key={x} x={x} y="250" width="8" height="5" rx="1"/>)}
-      </g>
-      <rect x="176" y="256" width="88" height="10" rx="3" fill="#4a3220" opacity=".65"/>
-    </svg>
-  );
-}
 
 const specsContainer: Variants = {
   hidden: {},
@@ -149,10 +100,9 @@ const specItem: Variants = {
 };
 
 export default function HeroSection({ onEnquire }: HeroSectionProps) {
-  const [slides, setSlides]       = useState<SlideItem[]>([]);
+  const [slides, setSlides]       = useState<SlideItem[]>(fallbackSlides);
   const [current, setCurrent]     = useState(0);
   const shouldReduceMotion = useReducedMotion();
-  const [loading, setLoading]     = useState(true);
   const [isMobile, setIsMobile]   = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -169,17 +119,18 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
       try {
         const res  = await api.get("/hero-section/all");
         const data: HeroData[] = res.data;
-        setSlides(data?.length
-          ? data.map(h => ({
-              tag: h.tag || "Special Offer", title: h.title, subtitle: h.subtitle,
-              image: h.image_url, alt: h.title, button_text: h.button_text,
-              button_link: h.button_link, image_position: h.image_position, enquiry: h.title,
-              processor: h.processor, ram: h.ram, storage: h.storage,
-              display: h.display, graphics: h.graphics,
-            }))
-          : fallbackSlides);
-      } catch { setSlides(fallbackSlides); }
-      finally { setLoading(false); }
+        if (data?.length) {
+          setSlides(data.map(h => ({
+            tag: h.tag || "Special Offer", title: h.title, subtitle: h.subtitle,
+            image: h.image_url, alt: h.title, button_text: h.button_text,
+            button_link: h.button_link, image_position: h.image_position, enquiry: h.title,
+            processor: h.processor, ram: h.ram, storage: h.storage,
+            display: h.display, graphics: h.graphics,
+          })));
+        }
+      } catch (err) {
+        console.error("Failed to load hero slides from API, using fallback slides", err);
+      }
     })();
   }, []);
 
@@ -198,12 +149,6 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [current, slides.length]);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen" style={{ background: "#F3E9DC" }}>
-      <div className="h-9 w-9 animate-spin rounded-full border-4"
-        style={{ borderColor: C.gold3, borderTopColor: "transparent" }}/>
-    </div>
-  );
   if (!slides.length) return null;
 
   const slide = slides[current];
@@ -450,11 +395,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                             className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
                             style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
                           />
-                        ) : (
-                          <div className="max-h-[250px] sm:max-h-none overflow-hidden flex items-center justify-center">
-                            <LaptopIllustration/>
-                          </div>
-                        )}
+                        ) : null}
                       </motion.div>
                     </motion.div>
 
@@ -578,7 +519,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         padding: "1.1rem 1rem",
       }}>
         <motion.div
-          className="mx-auto grid max-w-7xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -594,7 +535,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
           {trustItems.map(({ icon:Icon, title, desc }) => (
             <motion.div
               key={title}
-              className="flex items-start gap-3"
+              className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-3"
               variants={{
                 hidden: { opacity: 0, y: 60 },
                 visible: {
