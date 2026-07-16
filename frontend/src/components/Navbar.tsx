@@ -19,6 +19,22 @@ export default function Navbar() {
     { name: "Contact", href: "#contact" },
   ];
 
+  /** Smooth-scroll to a hash section and close mobile menu */
+  const handleNavClick = (linkName: string, href: string) => {
+    setActiveLink(linkName);
+    setIsOpen(false);
+    // Give the menu time to close before scrolling
+    setTimeout(() => {
+      const id = href.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (href === "#home") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, 50);
+  };
+
   const isVisibleRef = useRef(isVisible);
   useEffect(() => {
     isVisibleRef.current = isVisible;
@@ -207,66 +223,49 @@ export default function Navbar() {
           open: {
             opacity: 1,
             height: "auto",
-            display: "block",
-            transition: { duration: 0.3, ease: "easeOut" }
+            pointerEvents: "auto",
+            transition: { duration: 0.25, ease: "easeOut" }
           },
           closed: {
             opacity: 0,
             height: 0,
-            transitionEnd: { display: "none" },
+            pointerEvents: "none",
             transition: { duration: 0.2, ease: "easeIn" }
           }
         }}
-        className="md:hidden mt-3 mx-auto w-full pointer-events-auto rounded-3xl bg-white/95 backdrop-blur-md border border-[rgba(214,185,140,0.25)] shadow-[0_10px_30px_rgba(91,70,54,0.1)] overflow-hidden"
+        className="md:hidden mt-3 mx-auto w-full rounded-3xl bg-white/95 backdrop-blur-md border border-[rgba(214,185,140,0.25)] shadow-[0_10px_30px_rgba(91,70,54,0.1)] overflow-hidden"
       >
         <div className="py-2">
-          {navLinks.map((link) =>
-            link.href.startsWith("#") ? (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
-                className="flex items-center justify-between px-6 py-4 text-sm font-semibold transition-colors duration-300"
-                style={{
-                  color: activeLink === link.name ? "#5B4636" : "#7a6153",
-                  borderBottom: "1px solid rgba(214,185,140,0.1)",
-                }}
-              >
-                {link.name}
-                {activeLink === link.name && (
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
-                )}
-              </a>
-            ) : (
-              <Link
-                key={link.name}
-                to={link.href}
-                onClick={() => { setActiveLink(link.name); setIsOpen(false); }}
-                className="flex items-center justify-between px-6 py-4 text-sm font-semibold transition-colors duration-300"
-                style={{
-                  color: activeLink === link.name ? "#5B4636" : "#7a6153",
-                  borderBottom: "1px solid rgba(214,185,140,0.1)",
-                }}
-              >
-                {link.name}
-                {activeLink === link.name && (
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#D6B98C" }} />
-                )}
-              </Link>
-            )
-          )}
+          {navLinks.map((link) => (
+            <button
+              key={link.name}
+              onClick={() => handleNavClick(link.name, link.href)}
+              className="w-full flex items-center justify-between px-6 py-4 text-sm font-semibold transition-colors duration-200 text-left"
+              style={{
+                color: activeLink === link.name ? "#5B4636" : "#7a6153",
+                borderBottom: "1px solid rgba(214,185,140,0.1)",
+                background: "transparent",
+                cursor: "pointer",
+              }}
+            >
+              {link.name}
+              {activeLink === link.name && (
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#D6B98C" }} />
+              )}
+            </button>
+          ))}
           <div className="px-5 pt-3 pb-5">
-            <a
-              href="#contact"
+            <button
+              onClick={() => handleNavClick("Contact", "#contact")}
               className="flex items-center justify-center w-full rounded-full py-3.5 text-xs font-bold uppercase tracking-widest text-[#5B4636] active:scale-95 transition-transform"
               style={{
                 background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",
                 boxShadow: "0 2px 12px rgba(184,147,106,0.3)",
+                cursor: "pointer",
               }}
-              onClick={() => setIsOpen(false)}
             >
               Contact Now
-            </a>
+            </button>
           </div>
         </div>
       </motion.div>
