@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, ArrowRight, MessageSquare,
@@ -139,7 +139,6 @@ const trustItem: Variants = {
 export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const [slides, setSlides]     = useState<SlideItem[]>(fallbackSlides);
   const [current, setCurrent]   = useState(0);
-  const [direction, setDirection] = useState(1);
   const shouldReduceMotion      = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -171,8 +170,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     })();
   }, []);
 
-  const goTo = (idx: number, dir: number = 1) => {
-    setDirection(dir);
+  const goTo = (idx: number, _dir: number = 1) => {
     setCurrent((idx + slides.length) % slides.length);
   };
   const next = () => goTo(current + 1, 1);
