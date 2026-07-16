@@ -53,3 +53,8 @@ app.include_router(hero.router)
 @app.get("/")
 def root():
     return {"message": "Welcome to Winway Computers API"}
+
+@app.get("/health")
+def health_check():
+    """Lightweight health check endpoint for keep-alive pings."""
+    return {"status": "ok"}

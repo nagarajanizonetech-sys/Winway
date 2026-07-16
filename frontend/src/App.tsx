@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import ProtectedRoute from './components/ProtectedRoute';
+import BackendLoader from './components/BackendLoader';
+import { warmupBackend, stopKeepAlive } from './services/backendWarmup';
+import type { WarmupStatus } from './services/backendWarmup';
 
 const AdminLogin = React.lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
@@ -42,10 +45,33 @@ function AppLayout() {
 }
 
 function App() {
+  const [warmupStatus, setWarmupStatus] = useState<WarmupStatus | null>({
+    phase: 'waking',
+    attempt: 1,
+  });
+
+  useEffect(() => {
+    warmupBackend((status) => {
+      setWarmupStatus(status);
+
+      // Hide the loader shortly after backend is ready or timed out
+      if (status.phase === 'ready' || status.phase === 'timeout') {
+        setTimeout(() => setWarmupStatus(null), 600);
+      }
+    });
+
+    return () => stopKeepAlive();
+  }, []);
+
   return (
-    <Router>
-      <AppLayout />
-    </Router>
+    <>
+      {/* Show loading overlay while backend is cold-starting */}
+      <BackendLoader status={warmupStatus} />
+
+      <Router>
+        <AppLayout />
+      </Router>
+    </>
   );
 }
 
