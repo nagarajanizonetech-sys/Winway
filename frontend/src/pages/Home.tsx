@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [enquiryContext, setEnquiryContext] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -39,11 +40,14 @@ export default function Home() {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setIsLoading(true);
       try {
         const response = await api.get("/products/");
         setProducts(response.data);
       } catch (error) {
         console.error("Failed to fetch products", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchProducts();
@@ -169,8 +173,43 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* Products Grid or Empty State */}
-          {products.length === 0 ? (
+          {/* Products Grid or Skeleton or Empty State */}
+          {isLoading ? (
+            /* Skeleton cards while backend wakes up */
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-3xl overflow-hidden"
+                  style={{
+                    background: "rgba(255,253,247,0.7)",
+                    border: "1px solid rgba(214,185,140,0.2)",
+                    boxShadow: "0 4px 20px rgba(91,70,54,0.05)",
+                    animation: `skeletonPulse 1.6s ease-in-out ${i * 0.1}s infinite`,
+                  }}
+                >
+                  {/* Image placeholder */}
+                  <div style={{ height: "200px", background: "linear-gradient(135deg, rgba(243,233,220,0.8), rgba(214,185,140,0.15))" }} />
+                  <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ height: "20px", width: "70%", borderRadius: "8px", background: "rgba(214,185,140,0.25)" }} />
+                    <div style={{ height: "14px", width: "90%", borderRadius: "6px", background: "rgba(214,185,140,0.15)" }} />
+                    <div style={{ height: "14px", width: "60%", borderRadius: "6px", background: "rgba(214,185,140,0.15)" }} />
+                    <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                      <div style={{ height: "12px", width: "40%", borderRadius: "6px", background: "rgba(214,185,140,0.2)" }} />
+                      <div style={{ height: "12px", width: "30%", borderRadius: "6px", background: "rgba(214,185,140,0.15)" }} />
+                    </div>
+                    <div style={{ height: "40px", width: "100%", borderRadius: "12px", background: "rgba(214,185,140,0.2)", marginTop: "0.5rem" }} />
+                  </div>
+                </div>
+              ))}
+              <style>{`
+                @keyframes skeletonPulse {
+                  0%, 100% { opacity: 1; }
+                  50% { opacity: 0.55; }
+                }
+              `}</style>
+            </div>
+          ) : products.length === 0 ? (
             <div
               className="rounded-3xl p-20 text-center relative overflow-hidden"
               style={{
