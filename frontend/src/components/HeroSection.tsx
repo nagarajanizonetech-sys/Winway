@@ -235,10 +235,8 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
           clipPath: "inset(0)",
         }}
       >
-        {/* Hexagon background */}
-        <div
-          className={`${isMobile ? "absolute" : "fixed"} inset-0 w-full h-full z-0 pointer-events-none`}
-        >
+        {/* Hexagon background — always absolute so it stays inside the section */}
+        <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
           <HexagonBackground
             className="w-full h-full"
             style={{ opacity: isMobile ? 0.35 : 0.55 }}
@@ -269,10 +267,19 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
               </motion.button>
             )}
 
-            {/* GLASS CARD */}
-            <div
-              className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
-              style={{ ...glassCard, borderRadius: "1.25rem" }}
+            {/* GLASS CARD — swipeable */}
+            <motion.div
+              className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px] touch-pan-y"
+              style={{ ...glassCard, borderRadius: "1.25rem", cursor: multiSlide ? "grab" : "default" }}
+              drag={multiSlide ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.12}
+              onDragEnd={(_e, info) => {
+                const threshold = 50;
+                if (info.offset.x < -threshold) { next(); resetTimer(); }
+                else if (info.offset.x > threshold) { prev(); resetTimer(); }
+              }}
+              whileTap={multiSlide ? { cursor: "grabbing" } : {}}
             >
               <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 sm:h-full">
 
@@ -404,24 +411,15 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                         animate="visible"
                         exit="exit"
                       >
-                        {/* Continuous float — outside AnimatePresence key to avoid restart */}
-                        <motion.div
-                          animate={shouldReduceMotion ? {} : { y: [0, -16, 0] }}
-                          transition={shouldReduceMotion ? {} : {
-                            duration: 5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            repeatType: "loop",
-                          }}
-                          className="w-full flex justify-center"
-                        >
+                        {/* Static image — no floating animation */}
+                        <div className="w-full flex justify-center">
                           {slide.image ? (
                             <img src={slide.image} alt={slide.alt}
                               className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
                               style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
                             />
                           ) : null}
-                        </motion.div>
+                        </div>
                       </motion.div>
                     </AnimatePresence>
 
@@ -529,7 +527,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                 </div>
 
               </div>
-            </div>
+            </motion.div>
 
             {/* RIGHT arrow */}
             {multiSlide && !isMobile && (
