@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, ArrowRight, MessageSquare,
   Shield, Truck, BadgeCheck, Headphones,
@@ -76,36 +76,73 @@ const C = {
   sand: "#F5EDE0", sandLight: "#F9F4ED", white: "#FFFDF7",
 };
 
-const specsContainer: Variants = {
+// ─── Smooth spring easing used throughout ───────────────────────────────────
+const spring = { type: "spring", stiffness: 60, damping: 18, mass: 0.8 };
+const smoothEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+// ─── Coordinated text stagger container ─────────────────────────────────────
+const textContainer: Variants = {
   hidden: {},
   visible: {
-    transition: {
-      staggerChildren: 0.15
-    }
-  }
+    transition: { staggerChildren: 0.09, delayChildren: 0.05 },
+  },
+  exit: {
+    transition: { staggerChildren: 0.04, staggerDirection: -1 },
+  },
+};
+
+const textItem: Variants = {
+  hidden:  { opacity: 0, y: 22, filter: "blur(4px)" },
+  visible: { opacity: 1, y: 0,  filter: "blur(0px)",
+    transition: { duration: 0.65, ease: smoothEase } },
+  exit:    { opacity: 0, y: -12, filter: "blur(3px)",
+    transition: { duration: 0.3, ease: "easeIn" } },
+};
+
+// ─── Spec cards stagger ──────────────────────────────────────────────────────
+const specsContainer: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.25 } },
+  exit:    { transition: { staggerChildren: 0.04, staggerDirection: -1 } },
 };
 
 const specItem: Variants = {
-  hidden: {
-    opacity: 0,
-    x: 100
-  },
+  hidden:  { opacity: 0, x: 30, filter: "blur(3px)" },
+  visible: { opacity: 1, x: 0,  filter: "blur(0px)",
+    transition: { duration: 0.55, ease: smoothEase } },
+  exit:    { opacity: 0, x: 20, filter: "blur(2px)",
+    transition: { duration: 0.25, ease: "easeIn" } },
+};
+
+// ─── Image entrance ──────────────────────────────────────────────────────────
+const imageVariants: Variants = {
+  hidden:  { opacity: 0, scale: 0.82, y: 55, filter: "blur(8px)" },
   visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.6
-    }
-  }
+    opacity: 1, scale: 1, y: 0, filter: "blur(0px)",
+    transition: { duration: 0.9, ease: smoothEase },
+  },
+  exit:    {
+    opacity: 0, scale: 0.92, y: -30, filter: "blur(4px)",
+    transition: { duration: 0.4, ease: "easeIn" },
+  },
+};
+
+// ─── Trust bar item ──────────────────────────────────────────────────────────
+const trustItem: Variants = {
+  hidden:  { opacity: 0, y: 40, filter: "blur(4px)" },
+  visible: {
+    opacity: 1, y: 0, filter: "blur(0px)",
+    transition: { duration: 0.7, ease: smoothEase },
+  },
 };
 
 export default function HeroSection({ onEnquire }: HeroSectionProps) {
-  const [slides, setSlides]       = useState<SlideItem[]>(fallbackSlides);
-  const [current, setCurrent]     = useState(0);
-  const shouldReduceMotion = useReducedMotion();
-  const [isMobile, setIsMobile]   = useState(false);
+  const [slides, setSlides]     = useState<SlideItem[]>(fallbackSlides);
+  const [current, setCurrent]   = useState(0);
+  const [direction, setDirection] = useState(1);
+  const shouldReduceMotion      = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -134,11 +171,12 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     })();
   }, []);
 
-  const goTo = (idx: number, _d?: number) => {
+  const goTo = (idx: number, dir: number = 1) => {
+    setDirection(dir);
     setCurrent((idx + slides.length) % slides.length);
   };
-  const next = () => goTo(current + 1);
-  const prev = () => goTo(current - 1);
+  const next = () => goTo(current + 1, 1);
+  const prev = () => goTo(current - 1, -1);
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(next, 4500);
@@ -160,8 +198,6 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     { icon: HardDrive,   name: "Storage",   val: slide.storage   || "1TB SSD" },
   ];
 
-
-
   const glassCard: React.CSSProperties = {
     background: "rgba(255,253,247,0.60)",
     backdropFilter: "blur(24px) saturate(160%)",
@@ -180,7 +216,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     width: 40, height: 40,
     display: "flex", alignItems: "center", justifyContent: "center",
     cursor: "pointer", flexShrink: 0,
-    transition: "transform 0.15s, box-shadow 0.15s",
+    transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
   };
 
   const specPill: React.CSSProperties = {
@@ -201,15 +237,13 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
           clipPath: "inset(0)",
         }}
       >
-        {/* Hexagon background covering the full Hero Section block */}
-        <div 
+        {/* Hexagon background */}
+        <div
           className={`${isMobile ? "absolute" : "fixed"} inset-0 w-full h-full z-0 pointer-events-none`}
         >
-          <HexagonBackground 
+          <HexagonBackground
             className="w-full h-full"
-            style={{ 
-              opacity: isMobile ? 0.35 : 0.55,
-            }}
+            style={{ opacity: isMobile ? 0.35 : 0.55 }}
             hexagonSize={64}
             hexagonMargin={6}
           />
@@ -223,43 +257,43 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         <div className="relative z-10 mx-auto w-full max-w-[1520px] px-3 sm:px-5 lg:px-6 xl:px-8">
           <div className="flex items-center gap-0 sm:gap-3 lg:gap-4">
 
-            {/* LEFT arrow — not rendered at all on mobile (JS width check), shown sm+ */}
+            {/* LEFT arrow */}
             {multiSlide && !isMobile && (
-              <button
+              <motion.button
                 onClick={() => { prev(); resetTimer(); }}
                 aria-label="Previous slide"
                 className="flex shrink-0"
                 style={arrowStyle}
-                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                whileHover={{ scale: 1.12, boxShadow: "0 8px 28px rgba(91,70,54,0.22)" }}
+                whileTap={{ scale: 0.94 }}
               >
                 <ChevronLeft size={18}/>
-              </button>
+              </motion.button>
             )}
 
-            {/* GLASS CARD — occupies full width on mobile since arrows take no space there */}
+            {/* GLASS CARD */}
             <div
               className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
-              style={{
-                ...glassCard,
-                borderRadius: "1.25rem",   /* rounded on mobile too */
-              }}
+              style={{ ...glassCard, borderRadius: "1.25rem" }}
             >
               <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 sm:h-full">
 
                 <div className="sm:flex-1 sm:min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-3 lg:gap-5 items-center">
-                  {/* TEXT column */}
-                  {(() => {
-                    const titleLines = slide.title.split("\n");
-                    return (
+
+                  {/* TEXT column — AnimatePresence for smooth crossfade */}
+                  <div className="order-2 sm:order-1 sm:col-span-1 lg:col-span-5 flex flex-col justify-center min-h-0">
+                    <AnimatePresence mode="wait" initial={false}>
                       <motion.div
                         key={`text-col-${current}`}
-                        className="order-2 sm:order-1 sm:col-span-1 lg:col-span-5 flex flex-col justify-center gap-2 min-h-0"
+                        className="flex flex-col gap-2"
+                        variants={shouldReduceMotion ? {} : textContainer}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
                       >
+                        {/* Tag badge */}
                         <motion.span
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                          variants={shouldReduceMotion ? {} : textItem}
                           className="self-start inline-flex items-center gap-1.5 rounded-full px-3 py-1"
                           style={{ background:"rgba(201,169,110,0.14)", border:"1px solid rgba(201,169,110,0.38)" }}
                         >
@@ -269,10 +303,9 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           </span>
                         </motion.span>
 
+                        {/* Title */}
                         <motion.h1
-                          initial={{ opacity: 0, y: 25 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                          variants={shouldReduceMotion ? {} : textItem}
                           className="m-0 font-black leading-[1.08] tracking-[-0.025em]"
                           style={{
                             fontFamily: "'Playfair Display', Georgia, serif",
@@ -280,11 +313,11 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                             fontSize: "clamp(1.2rem, 2.4vw + 0.7rem, 2.55rem)",
                           }}
                         >
-                          {titleLines.map((line, lineIdx) => {
+                          {slide.title.split("\n").map((line, lineIdx) => {
                             const isGold = lineIdx === 1;
                             return (
-                              <span 
-                                key={lineIdx} 
+                              <span
+                                key={lineIdx}
                                 className={lineIdx > 0 ? "block mt-1" : "block"}
                                 style={isGold ? {
                                   background: `linear-gradient(135deg, ${C.gold} 0%, ${C.gold2} 100%)`,
@@ -299,11 +332,10 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           })}
                         </motion.h1>
 
+                        {/* Subtitle */}
                         {slide.subtitle && (
                           <motion.p
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+                            variants={shouldReduceMotion ? {} : textItem}
                             className="line-clamp-2 leading-6"
                             style={{
                               color: C.brown3,
@@ -315,11 +347,9 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           </motion.p>
                         )}
 
-                        {/* CTAs — names unchanged, kept exactly as original */}
+                        {/* CTAs */}
                         <motion.div
-                          initial={{ opacity: 0, scale: 0.97 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.4, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                          variants={shouldReduceMotion ? {} : textItem}
                           className="flex flex-wrap items-center gap-2"
                         >
                           <MagneticButton>
@@ -354,8 +384,8 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                           </MagneticButton>
                         </motion.div>
                       </motion.div>
-                    );
-                  })()}
+                    </AnimatePresence>
+                  </div>
 
                   {/* IMAGE column */}
                   <div className="order-1 sm:order-2 sm:col-span-1 lg:col-span-4 flex items-center justify-center relative h-[280px] sm:h-full">
@@ -367,37 +397,35 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       }}/>
                     </div>
 
-                    <motion.div
-                      key={`img-entrance-${current}`}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.8,
-                        y: 70
-                      }}
-                      animate={{
-                        opacity: 1,
-                        scale: 1,
-                        y: 0
-                      }}
-                      transition={{
-                        duration: 1,
-                        ease: [0.22, 1, 0.36, 1]
-                      }}
-                      className="relative z-10 w-full flex justify-center px-3"
-                    >
+                    <AnimatePresence mode="wait" initial={false}>
                       <motion.div
-                        animate={shouldReduceMotion ? {} : { y: [0, -18, 0] }}
-                        transition={shouldReduceMotion ? {} : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-full flex justify-center"
+                        key={`img-entrance-${current}`}
+                        className="relative z-10 w-full flex justify-center px-3"
+                        variants={shouldReduceMotion ? {} : imageVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
                       >
-                        {slide.image ? (
-                          <img src={slide.image} alt={slide.alt}
-                            className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
-                            style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
-                          />
-                        ) : null}
+                        {/* Continuous float — outside AnimatePresence key to avoid restart */}
+                        <motion.div
+                          animate={shouldReduceMotion ? {} : { y: [0, -16, 0] }}
+                          transition={shouldReduceMotion ? {} : {
+                            duration: 5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            repeatType: "loop",
+                          }}
+                          className="w-full flex justify-center"
+                        >
+                          {slide.image ? (
+                            <img src={slide.image} alt={slide.alt}
+                              className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
+                              style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
+                            />
+                          ) : null}
+                        </motion.div>
                       </motion.div>
-                    </motion.div>
+                    </AnimatePresence>
 
                     {slide.display && (
                       <div className="absolute bottom-3 right-3 bg-[#FFFDF7]/90 backdrop-blur-md border border-[rgba(214,185,140,0.3)] rounded-xl px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#5B4636] z-20 shadow-md">
@@ -409,11 +437,13 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                     {multiSlide && (
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 hidden sm:flex gap-1.5 z-20">
                         {slides.map((_,i) => (
-                          <button key={i}
+                          <motion.button key={i}
                             onClick={() => { goTo(i, i>current?1:-1); resetTimer(); }}
                             aria-label={`Slide ${i+1}`}
-                            className="h-1.5 rounded-full transition-all duration-300"
-                            style={{ width:i===current?20:7, background:i===current?C.gold3:"rgba(91,70,54,0.25)" }}
+                            animate={{ width: i===current ? 20 : 7 }}
+                            transition={spring}
+                            className="h-1.5 rounded-full"
+                            style={{ background:i===current?C.gold3:"rgba(91,70,54,0.25)" }}
                           />
                         ))}
                       </div>
@@ -421,70 +451,79 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   </div>
 
                   {/* SPEC CARDS — desktop only */}
-                  <motion.div
-                    key={`specs-${current}`}
-                    className="order-3 lg:col-span-3 hidden lg:flex flex-col justify-center gap-2"
-                    initial="hidden"
-                    animate="visible"
-                    variants={specsContainer}
-                  >
-                    {currentSpecs.map(({ icon:Icon, name, val }) => (
-                      <motion.div
-                        key={name}
-                        variants={specItem}
-                        className="flex items-center gap-2.5 rounded-2xl border p-2.5"
-                        style={specPill}
-                      >
-                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
-                          style={{ background:C.sand }}>
-                          <Icon size={13} color={C.gold2} strokeWidth={1.5}/>
-                        </div>
-                        <div className="flex flex-col leading-tight min-w-0">
-                          <span className="text-[12px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
-                          <span className="text-[10.5px] truncate" style={{ color:C.brown3 }}>{val}</span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={`specs-${current}`}
+                      className="order-3 lg:col-span-3 hidden lg:flex flex-col justify-center gap-2"
+                      variants={shouldReduceMotion ? {} : specsContainer}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                    >
+                      {currentSpecs.map(({ icon:Icon, name, val }) => (
+                        <motion.div
+                          key={name}
+                          variants={shouldReduceMotion ? {} : specItem}
+                          className="flex items-center gap-2.5 rounded-2xl border p-2.5"
+                          style={specPill}
+                          whileHover={{ x: 3, transition: { duration: 0.2 } }}
+                        >
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl"
+                            style={{ background:C.sand }}>
+                            <Icon size={13} color={C.gold2} strokeWidth={1.5}/>
+                          </div>
+                          <div className="flex flex-col leading-tight min-w-0">
+                            <span className="text-[12px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
+                            <span className="text-[10.5px] truncate" style={{ color:C.brown3 }}>{val}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
 
                 {/* Mobile/tablet: specs grid + dots */}
                 <div className="mt-3 lg:hidden">
-                  <motion.div
-                    key={`specs-mobile-${current}`}
-                    className="grid grid-cols-2 gap-2 w-full"
-                    initial="hidden"
-                    animate="visible"
-                    variants={specsContainer}
-                  >
-                    {currentSpecs.map(({ icon:Icon, name, val }) => (
-                      <motion.div
-                        key={name}
-                        variants={specItem}
-                        className="flex items-center gap-2.5 rounded-xl border px-3 py-2 min-w-0"
-                        style={specPill}
-                      >
-                        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg"
-                          style={{ background:C.sand }}>
-                          <Icon size={11} color={C.gold2} strokeWidth={1.5}/>
-                        </div>
-                        <div className="flex flex-col leading-tight min-w-0">
-                          <span className="text-[11px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
-                          <span className="text-[10px] truncate" style={{ color:C.brown3 }}>{val}</span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={`specs-mobile-${current}`}
+                      className="grid grid-cols-2 gap-2 w-full"
+                      variants={shouldReduceMotion ? {} : specsContainer}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                    >
+                      {currentSpecs.map(({ icon:Icon, name, val }) => (
+                        <motion.div
+                          key={name}
+                          variants={shouldReduceMotion ? {} : specItem}
+                          className="flex items-center gap-2.5 rounded-xl border px-3 py-2 min-w-0"
+                          style={specPill}
+                        >
+                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg"
+                            style={{ background:C.sand }}>
+                            <Icon size={11} color={C.gold2} strokeWidth={1.5}/>
+                          </div>
+                          <div className="flex flex-col leading-tight min-w-0">
+                            <span className="text-[11px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
+                            <span className="text-[10px] truncate" style={{ color:C.brown3 }}>{val}</span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
 
                   {/* Mobile dots */}
                   {multiSlide && (
                     <div className="flex sm:hidden items-center justify-center gap-1.5 mt-3">
                       {slides.map((_,i) => (
-                        <button key={i}
+                        <motion.button key={i}
                           onClick={() => { goTo(i, i>current?1:-1); resetTimer(); }}
                           aria-label={`Slide ${i+1}`}
-                          className="h-1.5 rounded-full transition-all duration-300"
-                          style={{ width:i===current?20:7, background:i===current?C.gold3:"rgba(91,70,54,0.25)" }}
+                          animate={{ width: i===current ? 20 : 7 }}
+                          transition={spring}
+                          className="h-1.5 rounded-full"
+                          style={{ background:i===current?C.gold3:"rgba(91,70,54,0.25)" }}
                         />
                       ))}
                     </div>
@@ -494,18 +533,18 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
               </div>
             </div>
 
-            {/* RIGHT arrow — not rendered at all on mobile (JS width check), shown sm+ */}
+            {/* RIGHT arrow */}
             {multiSlide && !isMobile && (
-              <button
+              <motion.button
                 onClick={() => { next(); resetTimer(); }}
                 aria-label="Next slide"
                 className="flex shrink-0"
                 style={arrowStyle}
-                onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+                whileHover={{ scale: 1.12, boxShadow: "0 8px 28px rgba(91,70,54,0.22)" }}
+                whileTap={{ scale: 0.94 }}
               >
                 <ChevronRight size={18}/>
-              </button>
+              </motion.button>
             )}
           </div>
         </div>
@@ -525,33 +564,22 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
           viewport={{ once: true, amount: 0.3 }}
           variants={{
             hidden: {},
-            visible: {
-              transition: {
-                staggerChildren: 0.15
-              }
-            }
+            visible: { transition: { staggerChildren: 0.12 } },
           }}
         >
           {trustItems.map(({ icon:Icon, title, desc }) => (
             <motion.div
               key={title}
               className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-3"
-              variants={{
-                hidden: { opacity: 0, y: 60 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    duration: 0.7,
-                    ease: "easeOut"
-                  }
-                }
-              }}
+              variants={trustItem}
             >
-              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-                style={{ background:C.sand }}>
+              <motion.div
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                style={{ background:C.sand }}
+                whileHover={{ scale: 1.12, rotate: 6, transition: { duration: 0.25 } }}
+              >
                 <Icon size={16} color={C.gold2} strokeWidth={1.5}/>
-              </div>
+              </motion.div>
               <div>
                 <p className="text-sm font-semibold leading-5" style={{ color:C.brown2 }}>{title}</p>
                 <p className="text-xs leading-5" style={{ color:C.brown3 }}>{desc}</p>
@@ -566,17 +594,29 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         <section style={{ padding:"1.75rem 1rem 2.5rem", background:C.sandLight }}>
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {serviceCards.map(({ icon:Icon, title, desc }) => (
-                <div key={title} className="flex h-full flex-col gap-3 rounded-[18px] border p-5"
-                  style={{ background:C.white, borderColor:"rgba(201,169,110,0.22)" }}>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background:C.sand }}>
+              {serviceCards.map(({ icon:Icon, title, desc }, i) => (
+                <motion.div
+                  key={title}
+                  className="flex h-full flex-col gap-3 rounded-[18px] border p-5"
+                  style={{ background:C.white, borderColor:"rgba(201,169,110,0.22)" }}
+                  initial={{ opacity: 0, y: 30, filter: "blur(4px)" }}
+                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.6, delay: i * 0.08, ease: smoothEase }}
+                  whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(91,70,54,0.1)", transition: { duration: 0.25 } }}
+                >
+                  <motion.div
+                    className="flex h-10 w-10 items-center justify-center rounded-xl"
+                    style={{ background:C.sand }}
+                    whileHover={{ scale: 1.1, rotate: 8, transition: { duration: 0.2 } }}
+                  >
                     <Icon size={18} color={C.gold2} strokeWidth={1.5}/>
-                  </div>
+                  </motion.div>
                   <div>
                     <p className="mb-1 text-base font-bold leading-6" style={{ color:C.brown2 }}>{title}</p>
                     <p className="text-sm leading-6" style={{ color:C.brown3 }}>{desc}</p>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
