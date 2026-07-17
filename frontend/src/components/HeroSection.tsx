@@ -223,8 +223,10 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   };
   const multiSlide = slides.length > 1;
 
-  // Keep navRef current every render
-  navRef.current = { next, prev, resetTimer };
+  // Update navRef inside useLayoutEffect — never during render
+  useEffect(() => {
+    navRef.current = { next, prev, resetTimer };
+  });
 
   useEffect(() => {
     if (slides.length <= 1) return;
@@ -269,8 +271,6 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     borderColor: "rgba(201,169,110,0.22)",
     boxShadow: "0 2px 10px rgba(91,70,54,0.06)",
   };
-
-  const multiSlide = slides.length > 1;
 
   return (
     <>
@@ -474,7 +474,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 hidden sm:flex gap-1.5 z-20">
                         {slides.map((_,i) => (
                           <motion.button key={i}
-                            onClick={() => { goTo(i, i>current?1:-1); resetTimer(); }}
+                            onClick={() => { goTo(i); resetTimer(); }}
                             aria-label={`Slide ${i+1}`}
                             animate={{ width: i===current ? 20 : 7 }}
                             transition={spring}
@@ -554,7 +554,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                     <div className="flex sm:hidden items-center justify-center gap-1.5 mt-3">
                       {slides.map((_,i) => (
                         <motion.button key={i}
-                          onClick={() => { goTo(i, i>current?1:-1); resetTimer(); }}
+                          onClick={() => { goTo(i); resetTimer(); }}
                           aria-label={`Slide ${i+1}`}
                           animate={{ width: i===current ? 20 : 7 }}
                           transition={spring}
