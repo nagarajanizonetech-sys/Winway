@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
+import {
+  motion, AnimatePresence, useReducedMotion,
+  type Variants, type PanInfo, type Transition,
+} from "framer-motion";
 import {
   ChevronLeft, ChevronRight, ArrowRight, MessageSquare,
   Shield, Truck, BadgeCheck, Headphones,
@@ -77,7 +80,12 @@ const C = {
 };
 
 // ─── Smooth spring easing used throughout ───────────────────────────────────
-const spring = { type: "spring", stiffness: 60, damping: 18, mass: 0.8 };
+const spring: Transition = {
+  type: "spring",
+  stiffness: 60,
+  damping: 18,
+  mass: 0.8,
+};
 const smoothEase: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 // ─── Coordinated text stagger container ─────────────────────────────────────
@@ -142,48 +150,10 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const shouldReduceMotion      = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const touchStartX  = useRef<number>(0);
-  const touchStartY  = useRef<number>(0);
-  const cardRef      = useRef<HTMLDivElement>(null);
-  // navRef always points to the latest nav callbacks — touch effect reads from here
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // navRef always points to the latest nav callbacks — the autoplay interval reads from here
   const navRef = useRef<{ next: () => void; prev: () => void; resetTimer: () => void }>(
     { next: () => {}, prev: () => {}, resetTimer: () => {} }
   );
-
-  // Native non-passive touch listeners — registered once, always call latest nav via navRef
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const onStart = (e: TouchEvent) => {
-      touchStartX.current = e.touches[0].clientX;
-      touchStartY.current = e.touches[0].clientY;
-    };
-    const onMove = (e: TouchEvent) => {
-      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
-      const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
-      if (dx > dy && dx > 8) e.preventDefault();
-    };
-    const onEnd = (e: TouchEvent) => {
-      const dx = e.changedTouches[0].clientX - touchStartX.current;
-      const dy = e.changedTouches[0].clientY - touchStartY.current;
-      if (Math.abs(dx) < Math.abs(dy) * 0.8) return;
-      const threshold = 40;
-      if      (dx < -threshold) { navRef.current.next(); navRef.current.resetTimer(); }
-      else if (dx >  threshold) { navRef.current.prev(); navRef.current.resetTimer(); }
-    };
-
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove",  onMove,  { passive: false });
-    el.addEventListener("touchend",   onEnd,   { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove",  onMove);
-      el.removeEventListener("touchend",   onEnd);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -223,7 +193,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   };
   const multiSlide = slides.length > 1;
 
-  // Update navRef inside useLayoutEffect — never during render
+  // Update navRef after every render — never during render itself
   useEffect(() => {
     navRef.current = { next, prev, resetTimer };
   });
@@ -233,6 +203,28 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     timerRef.current = setInterval(next, 4500);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [current, slides.length]);
+
+  // Framer Motion drag-based swipe — far more reliable on mobile than raw
+  // touchstart/touchmove/touchend listeners, since Framer Motion manages
+  // touch-action / pointer capture internally instead of racing the browser's
+  // native scroll gesture.
+  const SWIPE_OFFSET_THRESHOLD = 60;
+  const SWIPE_VELOCITY_THRESHOLD = 500;
+
+  const handleDragEnd = (
+    _e: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (!multiSlide) return;
+    const { offset, velocity } = info;
+    if (offset.x < -SWIPE_OFFSET_THRESHOLD || velocity.x < -SWIPE_VELOCITY_THRESHOLD) {
+      next();
+      resetTimer();
+    } else if (offset.x > SWIPE_OFFSET_THRESHOLD || velocity.x > SWIPE_VELOCITY_THRESHOLD) {
+      prev();
+      resetTimer();
+    }
+  };
 
   if (!slides.length) return null;
 
@@ -314,11 +306,21 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
               </motion.button>
             )}
 
-            {/* GLASS CARD — swipeable */}
+            {/* GLASS CARD — swipeable via Framer Motion drag */}
             <motion.div
-              ref={cardRef}
               className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
-              style={{ ...glassCard, borderRadius: "1.25rem", cursor: multiSlide ? "grab" : "default" }}
+              style={{
+                ...glassCard,
+                borderRadius: "1.25rem",
+                cursor: multiSlide ? "grab" : "default",
+                touchAction: multiSlide ? "pan-y" : "auto",
+              }}
+              drag={multiSlide ? "x" : false}
+              dragDirectionLock
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.35}
+              dragMomentum={false}
+              onDragEnd={handleDragEnd}
               whileTap={multiSlide ? { cursor: "grabbing" } : {}}
             >
               <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 sm:h-full">
@@ -455,6 +457,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                         <div className="w-full flex justify-center">
                           {slide.image ? (
                             <img src={slide.image} alt={slide.alt}
+                              draggable={false}
                               className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
                               style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
                             />
