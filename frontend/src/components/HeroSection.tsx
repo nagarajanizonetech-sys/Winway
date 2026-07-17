@@ -142,7 +142,48 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const shouldReduceMotion      = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const touchStartX  = useRef<number | null>(null);
+  const touchStartX  = useRef<number>(0);
+  const touchStartY  = useRef<number>(0);
+  const cardRef      = useRef<HTMLDivElement>(null);
+  // navRef always points to the latest nav callbacks — touch effect reads from here
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const navRef = useRef<{ next: () => void; prev: () => void; resetTimer: () => void }>(
+    { next: () => {}, prev: () => {}, resetTimer: () => {} }
+  );
+
+  // Native non-passive touch listeners — registered once, always call latest nav via navRef
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    const onStart = (e: TouchEvent) => {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+    };
+    const onMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+      if (dx > dy && dx > 8) e.preventDefault();
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      const dy = e.changedTouches[0].clientY - touchStartY.current;
+      if (Math.abs(dx) < Math.abs(dy) * 0.8) return;
+      const threshold = 40;
+      if      (dx < -threshold) { navRef.current.next(); navRef.current.resetTimer(); }
+      else if (dx >  threshold) { navRef.current.prev(); navRef.current.resetTimer(); }
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove",  onMove,  { passive: false });
+    el.addEventListener("touchend",   onEnd,   { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove",  onMove);
+      el.removeEventListener("touchend",   onEnd);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -171,15 +212,20 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     })();
   }, []);
 
-  const goTo = (idx: number, _dir: number = 1) => {
+  const goTo = (idx: number) => {
     setCurrent((idx + slides.length) % slides.length);
   };
-  const next = () => goTo(current + 1, 1);
-  const prev = () => goTo(current - 1, -1);
+  const next = () => goTo(current + 1);
+  const prev = () => goTo(current - 1);
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(next, 4500);
+    timerRef.current = setInterval(() => navRef.current.next(), 4500);
   };
+  const multiSlide = slides.length > 1;
+
+  // Keep navRef current every render
+  navRef.current = { next, prev, resetTimer };
+
   useEffect(() => {
     if (slides.length <= 1) return;
     timerRef.current = setInterval(next, 4500);
@@ -270,19 +316,9 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
             {/* GLASS CARD — swipeable */}
             <motion.div
+              ref={cardRef}
               className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
               style={{ ...glassCard, borderRadius: "1.25rem", cursor: multiSlide ? "grab" : "default" }}
-              onTouchStart={(e) => {
-                touchStartX.current = e.touches[0].clientX;
-              }}
-              onTouchEnd={(e) => {
-                if (touchStartX.current === null) return;
-                const delta = e.changedTouches[0].clientX - touchStartX.current;
-                touchStartX.current = null;
-                const threshold = 40;
-                if (delta < -threshold) { next(); resetTimer(); }
-                else if (delta > threshold) { prev(); resetTimer(); }
-              }}
               whileTap={multiSlide ? { cursor: "grabbing" } : {}}
             >
               <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 sm:h-full">
