@@ -141,7 +141,8 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const [current, setCurrent]   = useState(0);
   const shouldReduceMotion      = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
+  const touchStartX  = useRef<number | null>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -269,15 +270,18 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
             {/* GLASS CARD — swipeable */}
             <motion.div
-              className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px] touch-pan-y"
+              className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
               style={{ ...glassCard, borderRadius: "1.25rem", cursor: multiSlide ? "grab" : "default" }}
-              drag={multiSlide ? "x" : false}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.12}
-              onDragEnd={(_e, info) => {
-                const threshold = 50;
-                if (info.offset.x < -threshold) { next(); resetTimer(); }
-                else if (info.offset.x > threshold) { prev(); resetTimer(); }
+              onTouchStart={(e) => {
+                touchStartX.current = e.touches[0].clientX;
+              }}
+              onTouchEnd={(e) => {
+                if (touchStartX.current === null) return;
+                const delta = e.changedTouches[0].clientX - touchStartX.current;
+                touchStartX.current = null;
+                const threshold = 40;
+                if (delta < -threshold) { next(); resetTimer(); }
+                else if (delta > threshold) { prev(); resetTimer(); }
               }}
               whileTap={multiSlide ? { cursor: "grabbing" } : {}}
             >
