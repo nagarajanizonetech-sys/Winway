@@ -92,10 +92,10 @@ const textContainer: Variants = {
 };
 
 const textItem: Variants = {
-  hidden:  { opacity: 0, y: 22, filter: "blur(4px)" },
-  visible: { opacity: 1, y: 0,  filter: "blur(0px)",
+  hidden:  { opacity: 0, y: 22 },
+  visible: { opacity: 1, y: 0,
     transition: { duration: 0.65, ease: smoothEase } },
-  exit:    { opacity: 0, y: -12, filter: "blur(3px)",
+  exit:    { opacity: 0, y: -12,
     transition: { duration: 0.3, ease: "easeIn" } },
 };
 
@@ -107,31 +107,31 @@ const specsContainer: Variants = {
 };
 
 const specItem: Variants = {
-  hidden:  { opacity: 0, x: 30, filter: "blur(3px)" },
-  visible: { opacity: 1, x: 0,  filter: "blur(0px)",
+  hidden:  { opacity: 0, x: 30 },
+  visible: { opacity: 1, x: 0,
     transition: { duration: 0.55, ease: smoothEase } },
-  exit:    { opacity: 0, x: 20, filter: "blur(2px)",
+  exit:    { opacity: 0, x: 20,
     transition: { duration: 0.25, ease: "easeIn" } },
 };
 
 // ─── Image entrance ──────────────────────────────────────────────────────────
 const imageVariants: Variants = {
-  hidden:  { opacity: 0, scale: 0.82, y: 55, filter: "blur(8px)" },
+  hidden:  { opacity: 0, scale: 0.88, y: 40 },
   visible: {
-    opacity: 1, scale: 1, y: 0, filter: "blur(0px)",
+    opacity: 1, scale: 1, y: 0,
     transition: { duration: 0.9, ease: smoothEase },
   },
   exit:    {
-    opacity: 0, scale: 0.92, y: -30, filter: "blur(4px)",
+    opacity: 0, scale: 0.94, y: -24,
     transition: { duration: 0.4, ease: "easeIn" },
   },
 };
 
 // ─── Trust bar item ──────────────────────────────────────────────────────────
 const trustItem: Variants = {
-  hidden:  { opacity: 0, y: 40, filter: "blur(4px)" },
+  hidden:  { opacity: 0, y: 40 },
   visible: {
-    opacity: 1, y: 0, filter: "blur(0px)",
+    opacity: 1, y: 0,
     transition: { duration: 0.7, ease: smoothEase },
   },
 };
@@ -287,7 +287,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
                   {/* TEXT column — AnimatePresence for smooth crossfade */}
                   <div className="order-2 sm:order-1 sm:col-span-1 lg:col-span-5 flex flex-col justify-center min-h-0">
-                    <AnimatePresence mode="wait" initial={false}>
+                    <AnimatePresence mode="wait">
                       <motion.div
                         key={`text-col-${current}`}
                         className="flex flex-col gap-2"
@@ -402,7 +402,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       }}/>
                     </div>
 
-                    <AnimatePresence mode="wait" initial={false}>
+                    <AnimatePresence mode="wait">
                       <motion.div
                         key={`img-entrance-${current}`}
                         className="relative z-10 w-full flex justify-center px-3"
@@ -447,7 +447,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   </div>
 
                   {/* SPEC CARDS — desktop only */}
-                  <AnimatePresence mode="wait" initial={false}>
+                  <AnimatePresence mode="wait">
                     <motion.div
                       key={`specs-${current}`}
                       className="order-3 lg:col-span-3 hidden lg:flex flex-col justify-center gap-2"
@@ -480,7 +480,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
                 {/* Mobile/tablet: specs grid + dots */}
                 <div className="mt-3 lg:hidden">
-                  <AnimatePresence mode="wait" initial={false}>
+                  <AnimatePresence mode="wait">
                     <motion.div
                       key={`specs-mobile-${current}`}
                       className="grid grid-cols-2 gap-2 w-full"
@@ -595,8 +595,8 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   key={title}
                   className="flex h-full flex-col gap-3 rounded-[18px] border p-5"
                   style={{ background:C.white, borderColor:"rgba(201,169,110,0.22)" }}
-                  initial={{ opacity: 0, y: 30, filter: "blur(4px)" }}
-                  whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.6, delay: i * 0.08, ease: smoothEase }}
                   whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(91,70,54,0.1)", transition: { duration: 0.25 } }}
