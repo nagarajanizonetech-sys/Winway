@@ -98,7 +98,7 @@ export default function Home() {
                   Featured Products
                 </p>
                 <h2 className="mt-4 text-4xl md:text-5xl font-extrabold text-[#5B4636] tracking-tight leading-tight">
-                  Top laptops{" "}
+                  Top laptops{""}
                   <span
                     style={{
                       background: "linear-gradient(135deg, #D6B98C 0%, #b8936a 100%)",

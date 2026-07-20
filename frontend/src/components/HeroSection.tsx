@@ -12,7 +12,6 @@ import {
 import api from "../services/api";
 import { HexagonBackground } from "../components/backgrounds/hexagon";
 import MagneticButton from "./animations/MagneticButton";
-import Reveal from "./animations/Reveal";
 
 interface HeroData {
   id: number; title: string; subtitle: string;
@@ -135,20 +134,17 @@ const imageVariants: Variants = {
   },
 };
 
-// ─── Trust bar item ──────────────────────────────────────────────────────────
-const trustItem: Variants = {
-  hidden:  { opacity: 0, y: 40 },
-  visible: {
-    opacity: 1, y: 0,
-    transition: { duration: 0.7, ease: smoothEase },
-  },
-};
+// ─── (trust bar entrance variants removed — scroll animation disabled) ──────
 
 export default function HeroSection({ onEnquire }: HeroSectionProps) {
   const [slides, setSlides]     = useState<SlideItem[]>(fallbackSlides);
   const [current, setCurrent]   = useState(0);
   const shouldReduceMotion      = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
+  // Scroll / entrance animations are turned off entirely on mobile (and when
+  // the user prefers reduced motion) so the hero stays visually fixed/stable
+  // instead of jumping around as slides change or the page is scrolled.
+  const disableAnim = shouldReduceMotion || isMobile;
   const timerRef     = useRef<ReturnType<typeof setInterval> | null>(null);
   // navRef always points to the latest nav callbacks — the autoplay interval reads from here
   const navRef = useRef<{ next: () => void; prev: () => void; resetTimer: () => void }>(
@@ -169,11 +165,20 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         const data: HeroData[] = res.data;
         if (data?.length) {
           setSlides(data.map(h => ({
-            tag: h.tag || "Special Offer", title: h.title, subtitle: h.subtitle,
-            image: h.image_url, alt: h.title, button_text: h.button_text,
-            button_link: h.button_link, image_position: h.image_position, enquiry: h.title,
-            processor: h.processor, ram: h.ram, storage: h.storage,
-            display: h.display, graphics: h.graphics,
+            tag: h.tag || "Special Offer",
+            title: h.title,
+            subtitle: h.subtitle || "",
+            image: h.image_url || "",
+            alt: h.title || "Premium Laptop",
+            button_text: (h.button_text && h.button_text.trim()) ? h.button_text : "Explore Laptops",
+            button_link: (h.button_link && h.button_link.trim()) ? h.button_link : "#products",
+            image_position: h.image_position || "right",
+            enquiry: h.title || "Laptop Enquiry",
+            processor: h.processor,
+            ram: h.ram,
+            storage: h.storage,
+            display: h.display,
+            graphics: h.graphics,
           })));
         }
       } catch (err) {
@@ -268,7 +273,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
     <>
       <section
         id="home"
-        className="relative overflow-hidden pt-[108px] pb-8 sm:pb-10 lg:pb-12"
+        className="relative overflow-hidden pt-[76px] pb-4 sm:pt-[108px] sm:pb-10 lg:pb-12 min-h-[100dvh] sm:min-h-0 flex flex-col justify-center"
         style={{
           background: `linear-gradient(160deg, ${C.white} 0%, ${C.sand} 55%, #EDE0CC 100%)`,
           clipPath: "inset(0)",
@@ -289,8 +294,8 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         <div className="absolute pointer-events-none"
           style={{ bottom:-80, left:"6%", width:340, height:340, background:"rgba(201,169,110,0.13)", borderRadius:"50%", filter:"blur(90px)" }}/>
 
-        <div className="relative z-10 mx-auto w-full max-w-[1520px] px-3 sm:px-5 lg:px-6 xl:px-8">
-          <div className="flex items-center gap-0 sm:gap-3 lg:gap-4">
+        <div className="relative z-10 mx-auto w-full max-w-[1520px] px-3 sm:px-5 lg:px-6 xl:px-8 flex-1 flex flex-col justify-center">
+          <div className="flex items-center gap-0 sm:gap-3 lg:gap-4 flex-1 min-h-0">
 
             {/* LEFT arrow */}
             {multiSlide && !isMobile && (
@@ -308,7 +313,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
             {/* GLASS CARD — swipeable via Framer Motion drag */}
             <motion.div
-              className="flex-1 w-full min-w-0 sm:h-[400px] lg:h-[440px]"
+              className="flex-1 w-full min-w-0 h-auto sm:h-[400px] lg:h-[440px] flex flex-col justify-between"
               style={{
                 ...glassCard,
                 borderRadius: "1.25rem",
@@ -323,41 +328,41 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
               onDragEnd={handleDragEnd}
               whileTap={multiSlide ? { cursor: "grabbing" } : {}}
             >
-              <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7 sm:h-full">
+              <div className="flex flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7 flex-1 justify-between min-h-0">
 
-                <div className="sm:flex-1 sm:min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-3 lg:gap-5 items-center">
+                <div className="sm:flex-1 sm:min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-3 lg:gap-5 items-center">
 
                   {/* TEXT column — AnimatePresence for smooth crossfade */}
                   <div className="order-2 sm:order-1 sm:col-span-1 lg:col-span-5 flex flex-col justify-center min-h-0">
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={`text-col-${current}`}
-                        className="flex flex-col gap-2"
-                        variants={shouldReduceMotion ? {} : textContainer}
+                        className="flex flex-col gap-1.5 sm:gap-2"
+                        variants={disableAnim ? {} : textContainer}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
                       >
                         {/* Tag badge */}
                         <motion.span
-                          variants={shouldReduceMotion ? {} : textItem}
-                          className="self-start inline-flex items-center gap-1.5 rounded-full px-3 py-1"
+                          variants={disableAnim ? {} : textItem}
+                          className="self-start inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 sm:px-3 sm:py-1"
                           style={{ background:"rgba(201,169,110,0.14)", border:"1px solid rgba(201,169,110,0.38)" }}
                         >
                           <span className="animate-pulse h-1.5 w-1.5 rounded-full inline-block" style={{ background:C.gold }}/>
-                          <span className="text-[9.5px] font-bold uppercase tracking-[0.22em]" style={{ color:C.gold2 }}>
+                          <span className="text-[9px] sm:text-[9.5px] font-bold uppercase tracking-[0.2em]" style={{ color:C.gold2 }}>
                             {slide.tag}
                           </span>
                         </motion.span>
 
                         {/* Title */}
                         <motion.h1
-                          variants={shouldReduceMotion ? {} : textItem}
+                          variants={disableAnim ? {} : textItem}
                           className="m-0 font-black leading-[1.08] tracking-[-0.025em]"
                           style={{
                             fontFamily: "'Playfair Display', Georgia, serif",
                             color: C.brown2,
-                            fontSize: "clamp(1.2rem, 2.4vw + 0.7rem, 2.55rem)",
+                            fontSize: "clamp(1.15rem, 2vw + 0.65rem, 2.55rem)",
                           }}
                         >
                           {slide.title.split("\n").map((line, lineIdx) => {
@@ -365,7 +370,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                             return (
                               <span
                                 key={lineIdx}
-                                className={lineIdx > 0 ? "block mt-1" : "block"}
+                                className={lineIdx > 0 ? "block mt-0.5 sm:mt-1" : "block"}
                                 style={isGold ? {
                                   background: `linear-gradient(135deg, ${C.gold} 0%, ${C.gold2} 100%)`,
                                   WebkitBackgroundClip: "text",
@@ -382,11 +387,10 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                         {/* Subtitle */}
                         {slide.subtitle && (
                           <motion.p
-                            variants={shouldReduceMotion ? {} : textItem}
-                            className="line-clamp-2 leading-6"
+                            variants={disableAnim ? {} : textItem}
+                            className="line-clamp-2 leading-snug sm:leading-6 text-[11.5px] sm:text-xs lg:text-sm"
                             style={{
                               color: C.brown3,
-                              fontSize: "clamp(0.72rem, 0.8vw + 0.32rem, 0.88rem)",
                               maxWidth: "30rem",
                             }}
                           >
@@ -396,33 +400,33 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
                         {/* CTAs */}
                         <motion.div
-                          variants={shouldReduceMotion ? {} : textItem}
-                          className="flex flex-wrap items-center gap-2"
+                          variants={disableAnim ? {} : textItem}
+                          className="flex flex-wrap items-center gap-2 mt-1"
                         >
                           <MagneticButton>
                             <a
-                              href={slide.button_link}
+                              href={slide.button_link || "#products"}
                               className="inline-flex items-center gap-1.5 rounded-full font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                               style={{
                                 background:`linear-gradient(135deg,${C.brown} 0%,${C.brown2} 100%)`,
                                 color: C.white, textDecoration: "none",
                                 boxShadow: "0 5px 16px rgba(61,40,18,0.24)",
-                                padding: "0.45rem 1.1rem",
+                                padding: "0.42rem 1rem",
                                 fontSize: "clamp(0.7rem, 0.8vw + 0.22rem, 0.85rem)",
                               }}
                             >
-                              {slide.button_text}<ArrowRight size={13}/>
+                              {slide.button_text || "Explore Laptops"}<ArrowRight size={13}/>
                             </a>
                           </MagneticButton>
                           <MagneticButton>
                             <button
-                              onClick={() => onEnquire?.(slide.enquiry)}
+                              onClick={() => onEnquire?.(slide.enquiry || slide.title)}
                               className="inline-flex items-center gap-1.5 rounded-full font-medium transition-all hover:scale-[1.02] active:scale-[0.98]"
                               style={{
                                 background: "rgba(255,253,247,0.55)",
                                 color: C.brown,
                                 border: `1.5px solid rgba(201,169,110,0.48)`,
-                                padding: "0.42rem 0.9rem",
+                                padding: "0.4rem 0.85rem",
                                 fontSize: "clamp(0.7rem, 0.8vw + 0.22rem, 0.85rem)",
                               }}
                             >
@@ -435,11 +439,10 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                   </div>
 
                   {/* IMAGE column */}
-                  <div className="order-1 sm:order-2 sm:col-span-1 lg:col-span-4 flex items-center justify-center relative h-[280px] sm:h-full">
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="order-1 sm:order-2 sm:col-span-1 lg:col-span-4 flex items-center justify-center relative h-[260px] sm:h-full">                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div style={{
-                        width:"65%", height:"65%",
-                        background:"radial-gradient(ellipse, rgba(214,185,140,0.30) 0%, transparent 70%)",
+                        width:"80%", height:"80%",
+                        background:"radial-gradient(ellipse, rgba(214,185,140,0.35) 0%, transparent 70%)",
                         borderRadius:"50%",
                       }}/>
                     </div>
@@ -447,19 +450,19 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={`img-entrance-${current}`}
-                        className="relative z-10 w-full flex justify-center px-3"
-                        variants={shouldReduceMotion ? {} : imageVariants}
+                        className="relative z-10 w-full flex justify-center px-2 sm:px-3 h-full items-center"
+                        variants={disableAnim ? {} : imageVariants}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
                       >
                         {/* Static image — no floating animation */}
-                        <div className="w-full flex justify-center">
+                        <div className="w-full flex justify-center items-center h-full">
                           {slide.image ? (
                             <img src={slide.image} alt={slide.alt}
                               draggable={false}
-                              className="w-full max-w-[250px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain"
-                              style={{ filter:"drop-shadow(0 20px 36px rgba(91,70,54,0.18))", maxHeight:"350px" }}
+                              className="w-full max-w-[340px] sm:max-w-[270px] lg:max-w-[560px] xl:max-w-[650px] object-contain max-h-[245px] sm:max-h-[350px]"
+                              style={{ filter:"drop-shadow(0 18px 32px rgba(91,70,54,0.20))" }}
                             />
                           ) : null}
                         </div>
@@ -467,7 +470,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                     </AnimatePresence>
 
                     {slide.display && (
-                      <div className="absolute bottom-3 right-3 bg-[#FFFDF7]/90 backdrop-blur-md border border-[rgba(214,185,140,0.3)] rounded-xl px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#5B4636] z-20 shadow-md">
+                      <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 bg-[#FFFDF7]/90 backdrop-blur-md border border-[rgba(214,185,140,0.3)] rounded-xl px-2 py-0.5 sm:px-2.5 sm:py-1 text-[8.5px] sm:text-[9px] font-black uppercase tracking-widest text-[#5B4636] z-20 shadow-md">
                         {slide.display}
                       </div>
                     )}
@@ -494,7 +497,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                     <motion.div
                       key={`specs-${current}`}
                       className="order-3 lg:col-span-3 hidden lg:flex flex-col justify-center gap-2"
-                      variants={shouldReduceMotion ? {} : specsContainer}
+                      variants={disableAnim ? {} : specsContainer}
                       initial="hidden"
                       animate="visible"
                       exit="exit"
@@ -502,7 +505,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       {currentSpecs.map(({ icon:Icon, name, val }) => (
                         <motion.div
                           key={name}
-                          variants={shouldReduceMotion ? {} : specItem}
+                          variants={disableAnim ? {} : specItem}
                           className="flex items-center gap-2.5 rounded-2xl border p-2.5"
                           style={specPill}
                           whileHover={{ x: 3, transition: { duration: 0.2 } }}
@@ -522,12 +525,12 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                 </div>
 
                 {/* Mobile/tablet: specs grid + dots */}
-                <div className="mt-3 lg:hidden">
+                <div className="mt-2.5 sm:mt-3 lg:hidden">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`specs-mobile-${current}`}
-                      className="grid grid-cols-2 gap-2 w-full"
-                      variants={shouldReduceMotion ? {} : specsContainer}
+                      className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full"
+                      variants={disableAnim ? {} : specsContainer}
                       initial="hidden"
                       animate="visible"
                       exit="exit"
@@ -535,17 +538,17 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                       {currentSpecs.map(({ icon:Icon, name, val }) => (
                         <motion.div
                           key={name}
-                          variants={shouldReduceMotion ? {} : specItem}
-                          className="flex items-center gap-2.5 rounded-xl border px-3 py-2 min-w-0"
+                          variants={disableAnim ? {} : specItem}
+                          className="flex items-center gap-2 rounded-xl border px-2.5 py-1.5 sm:px-3 sm:py-2 min-w-0"
                           style={specPill}
                         >
-                          <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg"
+                          <div className="flex h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0 items-center justify-center rounded-lg"
                             style={{ background:C.sand }}>
                             <Icon size={11} color={C.gold2} strokeWidth={1.5}/>
                           </div>
                           <div className="flex flex-col leading-tight min-w-0">
-                            <span className="text-[11px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
-                            <span className="text-[10px] truncate" style={{ color:C.brown3 }}>{val}</span>
+                            <span className="text-[10px] sm:text-[11px] font-semibold truncate" style={{ color:C.brown2 }}>{name}</span>
+                            <span className="text-[9.5px] sm:text-[10px] truncate" style={{ color:C.brown3 }}>{val}</span>
                           </div>
                         </motion.div>
                       ))}
@@ -554,7 +557,7 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
 
                   {/* Mobile dots */}
                   {multiSlide && (
-                    <div className="flex sm:hidden items-center justify-center gap-1.5 mt-3">
+                    <div className="flex sm:hidden items-center justify-center gap-1.5 mt-2">
                       {slides.map((_,i) => (
                         <motion.button key={i}
                           onClick={() => { goTo(i); resetTimer(); }}
@@ -596,21 +599,11 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
         borderBottom: "1px solid rgba(201,169,110,0.2)",
         padding: "1.1rem 1rem",
       }}>
-        <motion.div
-          className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.12 } },
-          }}
-        >
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
           {trustItems.map(({ icon:Icon, title, desc }) => (
-            <motion.div
+            <div
               key={title}
               className="flex flex-col items-center text-center sm:flex-row sm:items-start sm:text-left gap-3"
-              variants={trustItem}
             >
               <motion.div
                 className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
@@ -623,44 +616,38 @@ export default function HeroSection({ onEnquire }: HeroSectionProps) {
                 <p className="text-sm font-semibold leading-5" style={{ color:C.brown2 }}>{title}</p>
                 <p className="text-xs leading-5" style={{ color:C.brown3 }}>{desc}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       {/* SERVICE CARDS */}
-      <Reveal>
-        <section style={{ padding:"1.75rem 1rem 2.5rem", background:C.sandLight }}>
-          <div className="mx-auto max-w-7xl">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {serviceCards.map(({ icon:Icon, title, desc }, i) => (
+      <section style={{ padding:"1.75rem 1rem 2.5rem", background:C.sandLight }}>
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {serviceCards.map(({ icon:Icon, title, desc }) => (
+              <motion.div
+                key={title}
+                className="flex h-full flex-col gap-3 rounded-[18px] border p-5"
+                style={{ background:C.white, borderColor:"rgba(201,169,110,0.22)" }}
+                whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(91,70,54,0.1)", transition: { duration: 0.25 } }}
+              >
                 <motion.div
-                  key={title}
-                  className="flex h-full flex-col gap-3 rounded-[18px] border p-5"
-                  style={{ background:C.white, borderColor:"rgba(201,169,110,0.22)" }}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.6, delay: i * 0.08, ease: smoothEase }}
-                  whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(91,70,54,0.1)", transition: { duration: 0.25 } }}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background:C.sand }}
+                  whileHover={{ scale: 1.1, rotate: 8, transition: { duration: 0.2 } }}
                 >
-                  <motion.div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ background:C.sand }}
-                    whileHover={{ scale: 1.1, rotate: 8, transition: { duration: 0.2 } }}
-                  >
-                    <Icon size={18} color={C.gold2} strokeWidth={1.5}/>
-                  </motion.div>
-                  <div>
-                    <p className="mb-1 text-base font-bold leading-6" style={{ color:C.brown2 }}>{title}</p>
-                    <p className="text-sm leading-6" style={{ color:C.brown3 }}>{desc}</p>
-                  </div>
+                  <Icon size={18} color={C.gold2} strokeWidth={1.5}/>
                 </motion.div>
-              ))}
-            </div>
+                <div>
+                  <p className="mb-1 text-base font-bold leading-6" style={{ color:C.brown2 }}>{title}</p>
+                  <p className="text-sm leading-6" style={{ color:C.brown3 }}>{desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      </Reveal>
+        </div>
+      </section>
     </>
   );
 }

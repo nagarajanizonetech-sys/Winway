@@ -5,12 +5,18 @@ export interface HexagonBackgroundProps extends React.ComponentProps<"div"> {
   hexagonSize?: number;
   hexagonMargin?: number;
   hexagonProps?: React.ComponentProps<"div">;
+  /** Base glow color as an "r, g, b" triplet (no rgb() wrapper) */
+  glowColor?: string;
+  /** Peak/accent color the shimmer sweeps through, as an "r, g, b" triplet */
+  accentColor?: string;
 }
 
 export function HexagonBackground({
   hexagonSize = 60,
   hexagonMargin = 4,
   hexagonProps,
+  glowColor = "90, 62, 28",
+  accentColor = "212, 175, 120",
   className = "",
   style,
   children,
@@ -45,48 +51,93 @@ export function HexagonBackground({
     const isTouch = matchMedia("(hover: none)").matches;
     if (isTouch) return;
 
-    const parent = el.parentElement || el;
     let cachedCells: HTMLDivElement[] | null = null;
-    let rAFId: number | null = null;
+    let animId: number | null = null;
+
+    let targetX = -999;
+    let targetY = -999;
+    let currX = -999;
+    let currY = -999;
+    let isHovering = false;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const clientX = e.clientX;
-      const clientY = e.clientY;
+      const rect = el.getBoundingClientRect();
+      // Check if cursor is roughly within or near the hero container
+      if (
+        e.clientX >= rect.left - 100 &&
+        e.clientX <= rect.right + 100 &&
+        e.clientY >= rect.top - 100 &&
+        e.clientY <= rect.bottom + 100
+      ) {
+        targetX = e.clientX - rect.left;
+        targetY = e.clientY - rect.top;
+        isHovering = true;
+      } else {
+        isHovering = false;
+      }
+    };
 
-      if (rAFId) return;
+    const handleMouseLeave = () => {
+      isHovering = false;
+    };
 
-      rAFId = requestAnimationFrame(() => {
-        rAFId = null;
-        if (!cachedCells) {
-          cachedCells = Array.from(el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`));
+    const tick = () => {
+      if (isHovering) {
+        if (currX === -999) {
+          currX = targetX;
+          currY = targetY;
+        } else {
+          currX += (targetX - currX) * 0.18;
+          currY += (targetY - currY) * 0.18;
         }
-        if (cachedCells.length === 0) return;
+      } else {
+        targetX = -999;
+        targetY = -999;
+        currX += (-999 - currX) * 0.1;
+        currY += (-999 - currY) * 0.1;
+      }
 
-        const rect = el.getBoundingClientRect();
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
+      el.style.setProperty("--mouse-x", `${currX}px`);
+      el.style.setProperty("--mouse-y", `${currY}px`);
 
-        el.style.setProperty("--mouse-x", `${x}px`);
-        el.style.setProperty("--mouse-y", `${y}px`);
+      if (!cachedCells) {
+        cachedCells = Array.from(el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`));
+      }
 
-        const radius = 180;
+      if (cachedCells.length > 0) {
+        const radius = 220;
+
         cachedCells.forEach((cell) => {
           const cellX = parseFloat(cell.getAttribute("data-x") || "0");
           const cellY = parseFloat(cell.getAttribute("data-y") || "0");
 
-          const dx = x - cellX;
-          const dy = y - cellY;
+          const dx = currX - cellX;
+          const dy = currY - cellY;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < radius) {
-            const influence = 1 - dist / radius;
-            cell.style.backgroundColor = `rgba(201, 169, 110, ${0.12 + influence * 0.4})`;
-            cell.style.borderColor = `rgba(201, 169, 110, ${0.3 + influence * 0.5})`;
-            cell.style.transform = `scale(${1 + influence * 0.08})`;
-            cell.style.boxShadow = `0 0 ${influence * 15}px rgba(201, 169, 110, ${influence * 0.3})`;
-            cell.style.zIndex = "1";
-            cell.style.opacity = `${0.45 + influence * 0.55}`;
+          if (dist < radius && currX > -500) {
+            const rawInfluence = 1 - dist / radius;
+            const influence = Math.pow(rawInfluence, 1.8); // smooth cubic falloff
+
+            const bgAlpha = 0.1 + influence * 0.55;
+            const borderAlpha = 0.35 + influence * 0.65;
+            const shadowRadius = influence * 28;
+            const shadowAlpha = influence * 0.75;
+            const scale = 1 + influence * 0.14;
+
+            // Pause the CSS shimmer keyframes on this cell while JS is
+            // driving it — otherwise the animation and the inline styles
+            // below both write to background/border/box-shadow/opacity
+            // every frame and stomp on each other, causing flicker.
+            cell.style.animationPlayState = "paused";
+            cell.style.backgroundColor = `rgba(${accentColor}, ${bgAlpha})`;
+            cell.style.borderColor = `rgba(${accentColor}, ${borderAlpha})`;
+            cell.style.transform = `scale(${scale})`;
+            cell.style.boxShadow = `0 0 ${shadowRadius}px rgba(${accentColor}, ${shadowAlpha})`;
+            cell.style.zIndex = Math.round(influence * 10).toString();
+            cell.style.opacity = `${0.55 + influence * 0.45}`;
           } else if (cell.style.transform !== "") {
+            cell.style.animationPlayState = "";
             cell.style.backgroundColor = "";
             cell.style.borderColor = "";
             cell.style.transform = "";
@@ -95,61 +146,65 @@ export function HexagonBackground({
             cell.style.opacity = "";
           }
         });
-      });
+      }
+
+      animId = requestAnimationFrame(tick);
     };
 
-    const handleMouseLeave = () => {
-      if (rAFId) {
-        cancelAnimationFrame(rAFId);
-        rAFId = null;
-      }
-      el.style.setProperty("--mouse-x", `-999px`);
-      el.style.setProperty("--mouse-y", `-999px`);
-      if (!cachedCells) {
-        cachedCells = Array.from(el.querySelectorAll<HTMLDivElement>(`.hex-cell-${id}`));
-      }
-      cachedCells.forEach((cell) => {
-        if (cell.style.transform !== "") {
-          cell.style.backgroundColor = "";
-          cell.style.borderColor = "";
-          cell.style.transform = "";
-          cell.style.boxShadow = "";
-          cell.style.zIndex = "";
-          cell.style.opacity = "";
-        }
-      });
-    };
-
-    parent.addEventListener("mousemove", handleMouseMove);
-    parent.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    animId = requestAnimationFrame(tick);
 
     return () => {
-      parent.removeEventListener("mousemove", handleMouseMove);
-      parent.removeEventListener("mouseleave", handleMouseLeave);
-      if (rAFId) cancelAnimationFrame(rAFId);
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      if (animId) cancelAnimationFrame(animId);
     };
-  }, [dims, hexWidth, hexHeight, id, shouldReduceMotion]);
-
-  const cols = dims.width ? Math.ceil(dims.width / colSpacing) + 2 : 0;
-  const rows = dims.height ? Math.ceil(dims.height / rowSpacing) + 2 : 0;
+  }, [dims, hexWidth, hexHeight, id, shouldReduceMotion, accentColor]);
 
   const hexClip =
     "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
 
-  const cells: { x: number; y: number; key: string; delay: number }[] = [];
-  const midRow = rows / 2;
-  const midCol = cols / 2;
-  for (let row = -1; row < rows + 1; row++) {
-    for (let col = -1; col < cols + 1; col++) {
-      const x = col * colSpacing + (row % 2 === 1 ? colSpacing / 2 : 0);
-      const y = row * rowSpacing;
-      
-      const dx = col - midCol;
-      const dy = row - midRow;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const delay = dist * 0.22;
-      
-      cells.push({ x, y, key: `${row}-${col}`, delay });
+  // How long one shimmer sweep takes to cross the whole grid before looping.
+  const LOOP_DURATION = 6;
+
+  // Build a properly centered grid: pad one extra ring of hexagons on every
+  // side so edges are always fully covered, then shift the whole grid so
+  // it's centered in the container instead of anchored to the top-left
+  // (which is what caused the ragged/uneven edges before).
+  const cols = dims.width ? Math.ceil(dims.width / colSpacing) + 4 : 0;
+  const rows = dims.height ? Math.ceil(dims.height / rowSpacing) + 4 : 0;
+
+  const gridWidth = cols * colSpacing;
+  const gridHeight = rows * rowSpacing;
+  const offsetX = (dims.width - gridWidth) / 2;
+  const offsetY = (dims.height - gridHeight) / 2;
+
+  type Cell = { x: number; y: number; key: string; delay: number };
+  const cells: Cell[] = [];
+
+  for (let row = -2; row < rows - 2; row++) {
+    for (let col = -2; col < cols - 2; col++) {
+      const x =
+        col * colSpacing +
+        offsetX +
+        (((row % 2) + 2) % 2 === 1 ? colSpacing / 2 : 0);
+      const y = row * rowSpacing + offsetY;
+      cells.push({ x, y, key: `${row}-${col}`, delay: 0 });
+    }
+  }
+
+  // Diagonal shimmer sweep: stagger each cell's animation delay by its
+  // position along the top-left -> bottom-right diagonal, so a band of
+  // light travels across the whole grid on a continuous loop.
+  if (cells.length > 0) {
+    const diagValues = cells.map((c) => c.x + c.y);
+    const minDiag = Math.min(...diagValues);
+    const maxDiag = Math.max(...diagValues);
+    const span = maxDiag - minDiag || 1;
+    for (const cell of cells) {
+      const t = (cell.x + cell.y - minDiag) / span; // 0 -> 1 across the sweep
+      cell.delay = -t * LOOP_DURATION;
     }
   }
 
@@ -157,37 +212,69 @@ export function HexagonBackground({
     <div
       ref={containerRef}
       className={`overflow-hidden ${className}`}
-      style={style}
+      style={{
+        ...style,
+        ["--glow-rgb" as string]: glowColor,
+        ["--accent-rgb" as string]: accentColor,
+      }}
       {...props}
     >
       <style>
         {`
-          @keyframes hexWave-${id} {
+          @keyframes hexShimmer-${id} {
             0% {
-              opacity: 0.45;
+              background-color: rgba(var(--glow-rgb), 0.2);
+              border-color: rgba(var(--glow-rgb), 0.55);
+              box-shadow: 0 0 0px rgba(var(--accent-rgb), 0);
+              opacity: 0.7;
             }
-            15% {
-              opacity: 1.0;
+            45% {
+              background-color: rgba(var(--glow-rgb), 0.2);
+              border-color: rgba(var(--glow-rgb), 0.55);
+              box-shadow: 0 0 0px rgba(var(--accent-rgb), 0);
+              opacity: 0.7;
             }
-            30%, 100% {
-              opacity: 0.45;
+            55% {
+              background-color: rgba(var(--accent-rgb), 0.6);
+              border-color: rgba(var(--accent-rgb), 1);
+              box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.75);
+              opacity: 1;
+            }
+            65% {
+              background-color: rgba(var(--glow-rgb), 0.2);
+              border-color: rgba(var(--glow-rgb), 0.55);
+              box-shadow: 0 0 0px rgba(var(--accent-rgb), 0);
+              opacity: 0.7;
+            }
+            100% {
+              background-color: rgba(var(--glow-rgb), 0.2);
+              border-color: rgba(var(--glow-rgb), 0.55);
+              box-shadow: 0 0 0px rgba(var(--accent-rgb), 0);
+              opacity: 0.7;
             }
           }
           .hex-cell-${id} {
-            animation: hexWave-${id} 5s ease-in-out infinite;
+            animation: hexShimmer-${id} ${LOOP_DURATION}s linear infinite;
+            will-change: opacity, box-shadow, background-color, border-color;
           }
+          /* Only applies when JS proximity tracking isn't driving this
+             cell (e.g. touch devices, reduced-motion users, or the brief
+             gap before the first mousemove tick fires). Once JS takes
+             over it pauses the animation and sets inline styles, which
+             this rule can no longer override — avoiding a visible snap. */
           .hex-cell-${id}:hover {
-            background-color: rgba(150, 111, 51, 0.55) !important;
-            border-color: rgba(150, 111, 51, 0.9) !important;
-            opacity: 1 !important;
+            background-color: rgba(var(--accent-rgb), 0.75);
+            border-color: rgba(var(--accent-rgb), 1);
+            box-shadow: 0 0 26px rgba(var(--accent-rgb), 0.8);
+            opacity: 1;
           }
         `}
       </style>
-      <div 
-        className="pointer-events-none absolute inset-0 hidden sm:block" 
+      <div
+        className="pointer-events-none absolute inset-0 hidden sm:block"
         style={{
-          background: "radial-gradient(180px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(210, 170, 110, 0.28), transparent 70%)",
-          zIndex: 5
+          background: `radial-gradient(260px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(${accentColor}, 0.36), transparent 75%)`,
+          zIndex: 5,
         }}
       />
       <div className="absolute inset-0">
@@ -203,10 +290,11 @@ export function HexagonBackground({
               width: hexWidth,
               height: hexHeight,
               clipPath: hexClip,
-              backgroundColor: "rgba(90, 62, 28, 0.18)",
-              border: "1px solid rgba(90, 62, 28, 0.4)",
+              backgroundColor: `rgba(${glowColor}, 0.2)`,
+              border: "1.25px solid rgba(90, 62, 28, 0.75)",
               animationDelay: `${cell.delay}s`,
-              transition: "background-color 0.3s, border-color 0.3s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+              transition:
+                "background-color 0.35s ease-out, border-color 0.35s ease-out, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease-out",
               ...hexagonProps?.style,
             }}
             {...hexagonProps}
